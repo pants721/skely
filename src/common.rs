@@ -3,6 +3,7 @@ use std::fs;
 use std::fs::{create_dir_all, OpenOptions};
 use std::io;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 use crate::skeleton::Skeleton;
 
@@ -41,7 +42,7 @@ pub fn sk_cfg_dir() -> PathBuf {
 pub fn list_skeleton_vec(items: &Vec<Skeleton>) {
     for (index, item) in items.iter().enumerate() {
         if let Some(item_path) = item.path.to_str() {
-            let single_file_str: &str = if item.path.is_file() { "File" } else { "Dir" };
+            let single_file_str: &str = if item.path.is_file() { "File" } else { "Directory" };
             println!(
                 "{}. {} [{}]: {}",
                 index,
@@ -90,5 +91,13 @@ pub fn copy_recursively(source: impl AsRef<Path>, destination: impl AsRef<Path>)
             fs::copy(entry.path(), destination.as_ref().join(entry.file_name()))?;
         }
     }
+    Ok(())
+}
+
+pub fn open_vim(arg: &PathBuf) -> Result<(), std::io::Error> {
+    Command::new("vim")
+        .arg(arg)
+        .spawn()?
+        .wait()?;
     Ok(())
 }
