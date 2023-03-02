@@ -1,5 +1,5 @@
-use crate::common::{check_cfg_dir, copy_recursively, path_buf_to_string, sk_cfg_dir, touch};
-use home::home_dir;
+// use crate::common::{check_cfg_dir, sk_cfg_dir, touch};
+use crate::common::copy_recursively;
 use std::fs::create_dir_all;
 use std::{fs, path::PathBuf};
 
@@ -10,21 +10,18 @@ pub struct Skeleton {
 }
 
 impl Skeleton {
-    pub fn new(id: &str) -> Self {
-        let mut path: PathBuf = sk_cfg_dir();
-        let id_lower: String = id.to_lowercase();
-        path.push(format!("{}.sk", id));
-        check_cfg_dir();
-        match touch(path.as_path()) {
-            Ok(_) => (),
-            Err(err) => eprintln!(
-                "ERROR: Error creating config file (Skeleton::new() {})",
-                err.to_string()
-            ),
-        }
+    // pub fn new(id: &str) -> Self {
+    //     let mut path: PathBuf = sk_cfg_dir();
+    //     let id_lower: String = id.to_lowercase();
+    //     path.push(format!("{id}.sk"));
+    //     check_cfg_dir();
+    //     match touch(path.as_path()) {
+    //         Ok(_) => (),
+    //         Err(err) => eprintln!("ERROR: Error creating config file (Skeleton::new() {err})"),
+    //     }
 
-        Self { id: id_lower, path }
-    }
+    //     Self { id: id_lower, path }
+    // }
 
     pub fn from_path_buf(path: PathBuf) -> Self {
         let mut trimmed_file_name = String::new();
