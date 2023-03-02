@@ -7,3 +7,8 @@ edition = "2021"
 
 [dependencies]
 home = "0.5.4"
+clap = {version = "4.1.8", features = [ "derive" ]}
+
+[[bin]]
+name = "sk"
+path = "src/main.rs"
