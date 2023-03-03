@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Context, Result};
-use home::home_dir;
 use colored::*;
+use home::home_dir;
 use std::fs;
 use std::fs::{create_dir_all, OpenOptions};
 use std::io;
@@ -59,8 +59,8 @@ pub fn list_skeleton_vec(items: &[Skeleton], verbose: bool) -> Result<()> {
             };
             if !verbose {
                 print!("{}  ", &id_styled);
-                if &item == &items.iter().last().unwrap() {
-                    println!("");
+                if item == items.iter().last().unwrap() {
+                    println!();
                 }
             } else if verbose {
                 println!(
@@ -126,5 +126,36 @@ pub fn is_yes(input: &str) -> Result<bool> {
         Ok(false)
     } else {
         Err(anyhow!("Invalud user input"))
+    }
+}
+
+mod tests {
+    use super::*;
+
+    #[test]
+    fn is_yes_test() {
+        assert!(is_yes("y").unwrap());
+        assert!(is_yes("yes").unwrap());
+        assert!(is_yes("Y").unwrap());
+        assert!(is_yes("yEs").unwrap());
+
+        assert!(!is_yes("n").unwrap());
+        assert!(!is_yes("no").unwrap());
+        assert!(!is_yes("N").unwrap());
+        assert!(!is_yes("nO").unwrap());
+
+        assert!(is_yes("balls").is_err());
+        assert!(is_yes("yesno").is_err());
+        assert!(is_yes("I <3 Mia").is_err());
+    }
+
+    #[test]
+    fn path_buf_to_string_test() {
+        let mut path1: PathBuf = PathBuf::new();
+        path1.push("the");
+        path1.push("dread");
+        path1.push("pirate");
+        path1.push("roberts");
+        assert_eq!(path_buf_to_string(&path1), "the/dread/pirate/roberts");
     }
 }
