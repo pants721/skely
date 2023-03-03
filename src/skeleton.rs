@@ -1,28 +1,29 @@
-// use crate::common::{check_cfg_dir, sk_cfg_dir, touch};
 use crate::common::copy_recursively;
+// use crate::common::{check_cfg_dir, sk_cfg_dir, touch};
+// use anyhow::Context;
+use anyhow::Result;
 use std::fs::create_dir_all;
 use std::{fs, path::PathBuf};
 
-#[derive(Debug)]
+/// Data structure for storing a skeleton project's information
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Skeleton {
     pub id: String,
     pub path: PathBuf,
 }
 
 impl Skeleton {
-    // pub fn new(id: &str) -> Self {
-    //     let mut path: PathBuf = sk_cfg_dir();
+    // pub fn new(id: &str) -> Result<Self> {
+    //     let mut path: PathBuf = sk_cfg_dir()?;
     //     let id_lower: String = id.to_lowercase();
     //     path.push(format!("{id}.sk"));
-    //     check_cfg_dir();
-    //     match touch(path.as_path()) {
-    //         Ok(_) => (),
-    //         Err(err) => eprintln!("ERROR: Error creating config file (Skeleton::new() {err})"),
-    //     }
+    //     check_cfg_dir()?;
+    //     touch(path.as_path()).context("Could not create .sk file")?;
 
-    //     Self { id: id_lower, path }
+    //     Ok(Self { id: id_lower, path })
     // }
 
+    /// Constructor for a skeleton from a specified path
     pub fn from_path_buf(path: PathBuf) -> Self {
         let mut trimmed_file_name = String::new();
         if let Some(file_name) = path.file_name() {
@@ -35,7 +36,8 @@ impl Skeleton {
         }
     }
 
-    pub fn copy_to_dir(&self, mut path: PathBuf) -> Result<(), std::io::Error> {
+    /// Copy skeleton to specified path
+    pub fn copy_to_dir(&self, mut path: PathBuf) -> Result<()> {
         if !path.exists() {
             create_dir_all(&path)?;
         }

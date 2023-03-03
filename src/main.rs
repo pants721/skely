@@ -1,3 +1,4 @@
+use anyhow::Result;
 use clap::Parser;
 
 use crate::app::App;
@@ -9,11 +10,10 @@ mod cli;
 mod common;
 mod skeleton;
 
-fn main() {
+fn main() -> Result<()> {
     let mut app: App = App::new();
-    startup(&mut app);
+    startup(&mut app)?;
     let args = Cli::parse();
-    app.handle_command(args.command).unwrap_or_else(|err| {
-        eprintln!("ERROR: Error handling command (App::handle_command() {err})")
-    });
+    app.handle_command(args.command)?;
+    Ok(())
 }
