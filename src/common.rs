@@ -1,4 +1,6 @@
+use anyhow::{anyhow, Context, Result};
 use home::home_dir;
+use colored::*;
 use std::fs;
 use std::fs::{create_dir_all, OpenOptions};
 use std::io;
@@ -8,11 +10,11 @@ use std::process::Command;
 use crate::app::App;
 use crate::skeleton::Skeleton;
 
-pub fn startup(app: &mut App) {
-    check_cfg_dir();
-    app.get_items_from_dir(sk_cfg_dir()).unwrap_or_else(|err| {
-        eprintln!("ERROR: Error fetching items from directory (App::get_items_from_dir() {err})")
-    });
+pub fn startup(app: &mut App) -> Result<()> {
+    check_cfg_dir()?;
+    app.get_items_from_dir(sk_cfg_dir()?)
+        .context("Could not fetch items from skelly config directory")?;
+    Ok(())
 }
 
 #[allow(dead_code)]
@@ -23,67 +25,73 @@ pub fn touch(path: &Path) -> io::Result<()> {
     }
 }
 
-pub fn check_cfg_dir() {
-    let path = sk_cfg_dir();
+pub fn check_cfg_dir() -> Result<()> {
+    let path = sk_cfg_dir()?;
     if !path.exists() {
-        create_dir_all(path).unwrap_or_else(|err| {
-            eprintln!("ERROR: Error creating config directory (check_cfg_dir() {err})")
-        });
+        create_dir_all(path).context("Could not create skelly config directory")?;
     }
+    Ok(())
 }
 
-pub fn sk_cfg_dir() -> PathBuf {
+pub fn sk_cfg_dir() -> Result<PathBuf> {
     let mut path: PathBuf = PathBuf::new();
     if let Some(home_dir_path) = home_dir() {
         path.push(home_dir_path);
         path.push(".config");
         path.push("sk");
+        Ok(path)
     } else {
-        eprintln!("ERROR: Error fetching home directory (sk_cfg_dir())");
-        panic!()
+        Err(anyhow!("Could not fetch home directory"))
     }
-    path
 }
 
-// pub fn list_skeleton_vec(items: &Vec<Skeleton>) {
-pub fn list_skeleton_vec(items: &[Skeleton]) {
-    for (index, item) in items.iter().enumerate() {
+pub fn list_skeleton_vec(items: &[Skeleton], verbose: bool) -> Result<()> {
+    for item in items.iter() {
         if let Some(item_path) = item.path.to_str() {
-            let single_file_str: &str = if item.path.is_file() {
-                "File"
+            let single_file_str: &str;
+            let id_styled;
+            if item.path.is_file() {
+                single_file_str = "File";
+                id_styled = item.id.to_string().white();
             } else {
-                "Directory"
+                single_file_str = "Directory";
+                id_styled = item.id.to_string().blue().bold();
             };
-            println!(
-                "{}. {} [{}]: {}",
-                index,
-                capitalize(&item.id),
-                tilda_ize_path_buf(item_path),
-                single_file_str
-            );
+            if !verbose {
+                print!("{}  ", &id_styled);
+                if &item == &items.iter().last().unwrap() {
+                    println!("");
+                }
+            } else if verbose {
+                println!(
+                    "  {} [{}]: {}",
+                    &id_styled,
+                    tilda_ize_path_buf(item_path)?,
+                    single_file_str
+                );
+            }
         }
     }
+    Ok(())
 }
 
-pub fn capitalize(s: &str) -> String {
-    let mut c = s.chars();
-    match c.next() {
-        None => String::new(),
-        Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
-    }
-}
+// pub fn capitalize(s: &str) -> String {
+//     let mut c = s.chars();
+//     match c.next() {
+//         None => String::new(),
+//         Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
+//     }
+// }
 
-fn tilda_ize_path_buf(item: &str) -> String {
+fn tilda_ize_path_buf(item: &str) -> Result<String> {
     if let Some(path_buf) = home_dir() {
         if let Some(str_opt) = path_buf.as_os_str().to_str() {
-            item.replace(str_opt, "~")
+            Ok(item.replace(str_opt, "~"))
         } else {
-            eprintln!("ERROR: Error converting path_buf to &str (tilda_ize_path_buf())");
-            String::new()
+            Err(anyhow!("Could not convert path_buf to &str"))
         }
     } else {
-        eprintln!("ERROR: Error extracting value from Option<PathBuf> (tilda_ize_path_buf())");
-        String::new()
+        Err(anyhow!("Could not extract value from Option<Pathbuf>"))
     }
 }
 
@@ -105,19 +113,18 @@ pub fn copy_recursively(source: impl AsRef<Path>, destination: impl AsRef<Path>)
     Ok(())
 }
 
-pub fn open_vim(arg: &PathBuf) -> Result<(), std::io::Error> {
+pub fn open_vim(arg: &PathBuf) -> Result<()> {
     Command::new("vim").arg(arg).spawn()?.wait()?;
     Ok(())
 }
 
-pub fn is_yes(input: &str) -> bool {
+pub fn is_yes(input: &str) -> Result<bool> {
     let input = input.to_lowercase();
     if input == "yes" || input == "y" {
-        true
+        Ok(true)
     } else if input == "no" || input == "n" {
-        false
+        Ok(false)
     } else {
-        eprintln!("ERROR: Invalid user input (Common::is_yes())");
-        false
+        Err(anyhow!("Invalud user input"))
     }
 }
