@@ -40,8 +40,10 @@
 
 !TODO
 [ ] Add default skeleton text
-[ ] Add correct error handling (get rid of the 100 std::io::Error's)
-[ ] Choose unwrap_or_else() or Result<>
+[x] Add correct error handling (get rid of the 100 std::io::Error's)
+[ ] Add --touch tag for add
+[x] Choose unwrap_or_else() or Result<>
+[ ] Interactive dir created for `sk add --dir`
 
 # Command Line Interface
 
