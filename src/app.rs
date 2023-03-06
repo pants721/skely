@@ -9,7 +9,7 @@ use crate::common::{
 };
 use crate::skeleton::Skeleton;
 
-/// Central data structure for skelly
+/// Central data structure for skely
 pub struct App {
     pub items: Vec<Skeleton>,
 }
@@ -22,7 +22,7 @@ impl App {
     pub fn run(&mut self) -> Result<()> {
         check_cfg_dir()?;
         self.get_items_from_dir(sk_cfg_dir()?)
-            .context("Could not fetch items from skelly config directory")?;
+            .context("Could not fetch items from skely config directory")?;
         Ok(())
     }
 

@@ -20,7 +20,7 @@ pub fn touch(path: &Path) -> io::Result<()> {
 pub fn check_cfg_dir() -> Result<()> {
     let path = sk_cfg_dir()?;
     if !path.exists() {
-        create_dir_all(path).context("Could not create skelly config directory")?;
+        create_dir_all(path).context("Could not create skely config directory")?;
     }
     Ok(())
 }

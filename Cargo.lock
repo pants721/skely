@@ -239,7 +239,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "skelly"
+name = "skely"
 version = "0.1.0"
 dependencies = [
  "anyhow",
