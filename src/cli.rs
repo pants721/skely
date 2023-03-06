@@ -2,25 +2,7 @@ use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
 
-// Command Line Interface
-
-//     Commands:
-//     List                - List all configured skeletons
-//     Edit <Skeleton>     - Edit a skeleton
-//     Add <Name>          - Configure new skeleton
-//     Add --source <Path> - Configure new skeleton from path
-//     New <Path>          - Copy skeleton to specified directory
-//     Remove <Skeleton>   - Remove configured skeleton and its files
-
-//     Usage Examples:
-//     sk list
-//     sk edit rust (opens vim with the rust sk file/dir)
-//     sk add rust (todo! maybe interactive dir creator)
-//     sk add --source rust_sk/
-//     sk new rust
-//     sk remove javascript
-
-#[derive(Parser)]
+#[derive(Parser, Debug, PartialEq)]
 #[command(name = "sk")]
 #[command(bin_name = "sk")]
 #[command(about = "A command line tool for using and managing skeleton projects", long_about = None)]
@@ -30,7 +12,7 @@ pub struct Cli {
     pub command: Commands,
 }
 
-#[derive(Debug, Subcommand)]
+#[derive(Debug, PartialEq, Subcommand)]
 pub enum Commands {
     /// Lists all configured skeletons
     List {
