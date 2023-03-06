@@ -5,45 +5,13 @@
 - [Capitalize word function (common.rs)](https://nick.groenen.me/notes/capitalize-a-string-in-rust/)
 - []
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 !TODO
 [ ] Add default skeleton text
 [x] Add correct error handling (get rid of the 100 std::io::Error's)
 [ ] Add --touch tag for add
 [x] Choose unwrap_or_else() or Result<>
 [ ] Interactive dir created for `sk add --dir`
+[ ] Proper bin instillation of release
 
 # Command Line Interface
 
