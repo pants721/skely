@@ -1,10 +1,17 @@
 [package]
 name = "skelly"
 version = "0.1.0"
-edition = "2021"
-license-file = "LICENSE"
+authors = ["Lucas Newcomb <pantsbabyy@gmail.com>"]
+description = """
+A simple command line tool for using and managing skeleton projects
+"""
+documentation = "https://github.com/pants721/skelly"
+homepage = "https://github.com/pants721/skelly"
+repository = "https://github.com/pants721/skelly"
 keywords = ["cli"]
 categories = ["command-line-utilities"]
+edition = "2021"
+license-file = "LICENSE"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
