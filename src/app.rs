@@ -4,7 +4,8 @@ use std::path::PathBuf;
 
 use crate::cli::Commands;
 use crate::common::{
-    copy_recursively, is_yes, list_skeleton_vec, open_vim, path_buf_to_string, sk_cfg_dir,
+    check_cfg_dir, copy_recursively, is_yes, list_skeleton_vec, open_vim, path_buf_to_string,
+    sk_cfg_dir,
 };
 use crate::skeleton::Skeleton;
 
@@ -16,6 +17,13 @@ pub struct App {
 impl App {
     pub fn new() -> Self {
         Self { items: Vec::new() }
+    }
+
+    pub fn run(&mut self) -> Result<()> {
+        check_cfg_dir()?;
+        self.get_items_from_dir(sk_cfg_dir()?)
+            .context("Could not fetch items from skelly config directory")?;
+        Ok(())
     }
 
     pub fn get_items_from_dir(&mut self, path: PathBuf) -> Result<()> {
@@ -33,14 +41,6 @@ impl App {
         self.items.iter().find(|&item| item.id == *id.to_string())
     }
 
-    // Cli functions
-
-    // - List                       - List all configured skeletons
-    // - Edit <Skeleton>            - Edit a skeleton
-    // - Add <Name>                 - Configure new skeleton
-    // - Add <Name> --source <Path> - Configure new skeleton from path
-    // - New <Path>                 - Copy skeleton to specified directory
-    // - Remove <Skeleton>          - Remove configured skeleton and its files
     pub fn handle_command(&self, command: Commands) -> Result<()> {
         match command {
             Commands::List { verbose } => self.list(verbose)?,

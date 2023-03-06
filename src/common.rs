@@ -10,13 +10,6 @@ use std::process::Command;
 use crate::app::App;
 use crate::skeleton::Skeleton;
 
-pub fn startup(app: &mut App) -> Result<()> {
-    check_cfg_dir()?;
-    app.get_items_from_dir(sk_cfg_dir()?)
-        .context("Could not fetch items from skelly config directory")?;
-    Ok(())
-}
-
 #[allow(dead_code)]
 pub fn touch(path: &Path) -> io::Result<()> {
     match OpenOptions::new().create(true).write(true).open(path) {
@@ -51,10 +44,10 @@ pub fn list_skeleton_vec(items: &[Skeleton], verbose: bool) -> Result<()> {
             let single_file_str: &str;
             let id_styled;
             if item.path.is_file() {
-                single_file_str = "File";
+                single_file_str = "Single File";
                 id_styled = item.id.to_string().white();
             } else {
-                single_file_str = "Directory";
+                single_file_str = "Project";
                 id_styled = item.id.to_string().blue().bold();
             };
             if !verbose {
@@ -74,14 +67,6 @@ pub fn list_skeleton_vec(items: &[Skeleton], verbose: bool) -> Result<()> {
     }
     Ok(())
 }
-
-// pub fn capitalize(s: &str) -> String {
-//     let mut c = s.chars();
-//     match c.next() {
-//         None => String::new(),
-//         Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
-//     }
-// }
 
 fn tilda_ize_path_buf(item: &str) -> Result<String> {
     if let Some(path_buf) = home_dir() {
@@ -130,10 +115,9 @@ pub fn is_yes(input: &str) -> Result<bool> {
 }
 
 mod tests {
-    use super::*;
-
     #[test]
     fn is_yes_test() {
+        use super::is_yes;
         assert!(is_yes("y").unwrap());
         assert!(is_yes("yes").unwrap());
         assert!(is_yes("Y").unwrap());
@@ -151,6 +135,8 @@ mod tests {
 
     #[test]
     fn path_buf_to_string_test() {
+        use std::path::PathBuf;
+        use super::path_buf_to_string;
         let mut path1: PathBuf = PathBuf::new();
         path1.push("the");
         path1.push("dread");
