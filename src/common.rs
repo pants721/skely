@@ -7,7 +7,6 @@ use std::io;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use crate::app::App;
 use crate::skeleton::Skeleton;
 
 #[allow(dead_code)]
