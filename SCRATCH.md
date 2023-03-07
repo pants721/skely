@@ -3,7 +3,7 @@
 - [Clap cookbook cargo derive](https://docs.rs/clap/latest/clap/_derive/_cookbook/cargo_example_derive/index.html)
 - [Copy directory recursivley function (common.rs)](https://nick.groenen.me/notes/recursively-copy-files-in-rust/)
 - [Capitalize word function (common.rs)](https://nick.groenen.me/notes/capitalize-a-string-in-rust/)
-- []
+- [crates.io Publishing](https://doc.rust-lang.org/cargo/reference/publishing.html)
 
 !TODO
 [ ] Add default skeleton text
@@ -11,7 +11,8 @@
 [ ] Add --touch tag for add
 [x] Choose unwrap_or_else() or Result<>
 [ ] Interactive dir created for `sk add --dir`
-[ ] Proper bin instillation of release
+[x] Proper bin instillation of release
+[x] Non vim text editors
 
 # Command Line Interface
 

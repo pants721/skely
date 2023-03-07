@@ -97,8 +97,30 @@ pub fn copy_recursively(source: impl AsRef<Path>, destination: impl AsRef<Path>)
     Ok(())
 }
 
-pub fn open_vim(arg: &PathBuf) -> Result<()> {
-    Command::new("vim").arg(arg).spawn()?.wait()?;
+pub fn open_editor(arg: &PathBuf) -> Result<()> {
+    // Editors (in order)
+    let editors = vec![
+        "nvim",
+        "vim",
+        "nano",
+        "emacs",
+        "vi",
+    ];
+
+    for editor in editors {
+        let output = Command::new("which")
+            .arg(editor)
+            .output()
+            .context("Failed to execute command")?;
+
+        if output.status.success() {
+            Command::new(editor)
+                .arg(arg)
+                .spawn()?
+                .wait()?;
+            break;
+        }
+    }
     Ok(())
 }
 
