@@ -4,8 +4,8 @@ use std::path::PathBuf;
 
 use crate::cli::Commands;
 use crate::common::{
-    check_cfg_dir, copy_recursively, is_yes, list_skeleton_vec, open_vim, path_buf_to_string,
-    sk_cfg_dir,
+    check_cfg_dir, copy_recursively, is_yes, list_skeleton_vec, open_editor, path_buf_to_string,
+    sk_cfg_dir, touch, skeletons_cfg_dir,
 };
 use crate::skeleton::Skeleton;
 
@@ -21,7 +21,7 @@ impl App {
 
     pub fn run(&mut self) -> Result<()> {
         check_cfg_dir()?;
-        self.get_items_from_dir(sk_cfg_dir()?)
+        self.get_items_from_dir(skeletons_cfg_dir()?)
             .context("Could not fetch items from skely config directory")?;
         Ok(())
     }
@@ -45,7 +45,11 @@ impl App {
         match command {
             Commands::List { verbose } => self.list(verbose)?,
             Commands::Edit { id } => self.edit(id)?,
-            Commands::Add { name, source } => self.add(name, source)?,
+            Commands::Add {
+                name,
+                source,
+                touch,
+            } => self.add(name, source, touch)?,
             Commands::New { id, path } => self.new_project(id, path)?,
             Commands::Remove { id } => self.remove(id)?,
         }
@@ -60,15 +64,15 @@ impl App {
 
     pub fn edit(&self, skeleton_str: String) -> Result<()> {
         if let Some(skeleton) = self.get_skeleton_by_id(&skeleton_str) {
-            open_vim(&skeleton.path)?;
+            open_editor(&skeleton.path)?;
             Ok(())
         } else {
             Err(anyhow!("Skeleton not found"))
         }
     }
 
-    pub fn add(&self, id: String, source: Option<PathBuf>) -> Result<()> {
-        let mut path: PathBuf = sk_cfg_dir()?;
+    pub fn add(&self, id: String, source: Option<PathBuf>, touch_var: bool) -> Result<()> {
+        let mut path: PathBuf = skeletons_cfg_dir()?;
         path.push(format!("{id}.sk"));
         if path.exists() {
             Err(anyhow!(format!(
@@ -78,21 +82,22 @@ impl App {
         } else {
             match source {
                 Some(source) => {
+                    let mut dest_dir = skeletons_cfg_dir()?;
                     if source.is_dir() {
-                        let mut dest_dir = sk_cfg_dir()?;
                         dest_dir.push(source.components().last().unwrap());
-                        dbg!(&source);
-                        dbg!(&dest_dir);
                         copy_recursively(source, dest_dir)
                             .context("Failed to copy directory recursivley")?;
                     } else if source.is_file() {
-                        let mut dest_dir = sk_cfg_dir()?;
                         dest_dir.push(format!("{id}.sk"));
                         fs::copy(source, dest_dir)?;
                     }
                 }
                 None => {
-                    open_vim(&path).context("Failed to open vim")?;
+                    if !touch_var {
+                        open_editor(&path).context("Failed to open editor")?;
+                    } else {
+                        touch(&path).context("Failed to create file")?;
+                    }
                 }
             }
             Ok(())

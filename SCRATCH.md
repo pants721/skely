@@ -8,7 +8,7 @@
 !TODO
 [ ] Add default skeleton text
 [x] Add correct error handling (get rid of the 100 std::io::Error's)
-[ ] Add --touch tag for add
+[x] Add --touch tag for add
 [x] Choose unwrap_or_else() or Result<>
 [ ] Interactive dir created for `sk add --dir`
 [x] Proper bin instillation of release

@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use colored::*;
 use home::home_dir;
-use std::fs;
+use std::fs::{self, create_dir};
 use std::fs::{create_dir_all, OpenOptions};
 use std::io;
 use std::path::{Path, PathBuf};
@@ -18,9 +18,10 @@ pub fn touch(path: &Path) -> io::Result<()> {
 }
 
 pub fn check_cfg_dir() -> Result<()> {
-    let path = sk_cfg_dir()?;
+    let path = skeletons_cfg_dir()?;
     if !path.exists() {
-        create_dir_all(path).context("Could not create skely config directory")?;
+        create_dir_all(skeletons_cfg_dir()?).context("Could not create sk/skeletons directory")?;
+        dbg!(skeletons_cfg_dir()?);
     }
     Ok(())
 }
@@ -35,6 +36,12 @@ pub fn sk_cfg_dir() -> Result<PathBuf> {
     } else {
         Err(anyhow!("Could not fetch home directory"))
     }
+}
+
+pub fn skeletons_cfg_dir() -> Result<PathBuf> {
+    let mut skeletons_dir = sk_cfg_dir()?;
+    skeletons_dir.push("skeletons");
+    Ok(skeletons_dir)
 }
 
 pub fn list_skeleton_vec(items: &[Skeleton], verbose: bool) -> Result<()> {
@@ -98,11 +105,14 @@ pub fn copy_recursively(source: impl AsRef<Path>, destination: impl AsRef<Path>)
 }
 
 pub fn open_editor(arg: &PathBuf) -> Result<()> {
+    #[rustfmt::skip]
     // Editors (in order)
     let editors = vec![
         "nvim",
         "vim",
+        "hx",
         "nano",
+        // dont be mad i use emacs, its just slow for these purposes
         "emacs",
         "vi",
     ];
@@ -114,10 +124,7 @@ pub fn open_editor(arg: &PathBuf) -> Result<()> {
             .context("Failed to execute command")?;
 
         if output.status.success() {
-            Command::new(editor)
-                .arg(arg)
-                .spawn()?
-                .wait()?;
+            Command::new(editor).arg(arg).spawn()?.wait()?;
             break;
         }
     }
@@ -131,7 +138,7 @@ pub fn is_yes(input: &str) -> Result<bool> {
     } else if input == "no" || input == "n" {
         Ok(false)
     } else {
-        Err(anyhow!("Invalud user input"))
+        Err(anyhow!("Invalid user input"))
     }
 }
 
@@ -156,8 +163,8 @@ mod tests {
 
     #[test]
     fn path_buf_to_string_test() {
-        use std::path::PathBuf;
         use super::path_buf_to_string;
+        use std::path::PathBuf;
         let mut path1: PathBuf = PathBuf::new();
         path1.push("the");
         path1.push("dread");

@@ -33,6 +33,9 @@ pub enum Commands {
         /// Optional source to create skeleton from
         #[arg(short, long)]
         source: Option<PathBuf>,
+        /// Creates .sk file without opening editor
+        #[arg(short, long)]
+        touch: bool,
     },
     /// Creates a new project from specified skeleton
     New {
