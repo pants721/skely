@@ -136,14 +136,16 @@ impl App {
 
             let project_name = match name {
                 Some(name_val) => name_val,
+                // dont like this
                 None => path.file_name().unwrap().to_str().unwrap().to_string(),
             };
 
-            let placeholder_name = match self.settings.placeholder.to_owned() {
-                Some(name_val) => name_val,
-                None => "TEMPLATE".to_string(),
+            match self.settings.placeholder.to_owned() {
+                Some(name_val) => {
+                    replace_string_in_dir(&path, name_val, project_name)?;
+                },
+                None => (),
             };
-            replace_string_in_dir(&path, placeholder_name.to_string(), project_name)?;
 
             Ok(())
         } else {
