@@ -9,7 +9,7 @@
 - [Rust file struct](https://doc.rust-lang.org/std/fs/struct.File.html)
 - [Toml crate docs](https://docs.rs/toml/latest/toml/#)
 
-!TODO
+# TODO
 - [ ] Add default skeleton text
 - [x] Add correct error handling (get rid of the 100 std::io::Error's)
 - [x] Add --touch tag for add
