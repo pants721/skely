@@ -117,6 +117,9 @@ impl App {
     }
 
     pub fn new_project(&self, id: String, path: PathBuf) -> Result<()> {
+        if path.exists() {
+            return Err(anyhow!("Target directory already exists"));
+        }
         if let Some(skeleton) = self.get_skeleton_by_id(&id) {
             if path_buf_to_string(&path) == "." {
                 println!(
