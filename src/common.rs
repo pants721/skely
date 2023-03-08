@@ -29,11 +29,9 @@ pub fn check_cfg() -> Result<()> {
         eprintln!("Config file (config.toml) does not exist. Creating...");
         let mut cfg_file: File = File::create(&cfg_file_path)?;
         cfg_file.write_all(b"# Skely config\n")?;
-        cfg_file.write_all(b"\n")?;
-        cfg_file.write_all(b"# Replace with your editor of choice!\n")?;
         // replace with a for loop over all settings fields
         cfg_file.write_all(b"editor = \"\"\n")?;
-        cfg_file.write_all(b"placeholder= \"\"\n")?;
+        cfg_file.write_all(b"placeholder= \"PLACEHOLDER\"\n")?;
     }
     Ok(())
 }

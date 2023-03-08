@@ -8,8 +8,6 @@ use crate::common::{copy_recursively, is_yes, list_skeleton_vec, open_editor, pa
 
 use crate::skeleton::Skeleton;
 
-const PLACEHOLDER: &str = "PLACEHOLDER_NAME";
-
 /// Central data structure for skely
 pub struct App {
     pub items: Vec<Skeleton>,
@@ -137,7 +135,7 @@ impl App {
             let project_name = match name {
                 Some(name_val) => name_val,
                 // dont like this
-                None => path.file_name().unwrap().to_str().unwrap().to_string(),
+                None => path.file_name().unwrap().to_os_string().into_string().unwrap(),
             };
 
             match self.settings.placeholder.to_owned() {

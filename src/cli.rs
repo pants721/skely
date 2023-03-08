@@ -46,6 +46,7 @@ pub enum Commands {
         #[arg(required = true)]
         path: PathBuf,
         /// Optional name, defaults to directory name
+        #[arg(short, long)]
         name: Option<String>,
     },
     /// Removes skeleton
