@@ -1,9 +1,11 @@
-use crate::common::copy_recursively;
+use crate::common::{copy_recursively, touch, path_buf_to_string};
 // use crate::common::{check_cfg_dir, sk_cfg_dir, touch};
 // use anyhow::Context;
-use anyhow::Result;
+use anyhow::{Result, Context};
 use std::fs::create_dir_all;
+use std::time::Instant;
 use std::{fs, path::PathBuf};
+use std::io::{Read, Write};
 
 /// Data structure for storing a skeleton project's information
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -38,15 +40,18 @@ impl Skeleton {
 
     /// Copy skeleton to specified path
     pub fn copy_to_dir(&self, mut path: PathBuf) -> Result<()> {
-        if !path.exists() {
+        if !path.exists() && self.path.is_dir() {
             create_dir_all(&path)?;
         }
 
         if self.path.is_file() {
-            path.push(format!("{}.sk", &self.id));
-            fs::copy(&self.path, &path)?;
-        } else if path.is_dir() {
-            copy_recursively(&self.path, &path)?;
+            if path_buf_to_string(&path) == "." {
+                path.push(format!("{}.sk", &self.id));
+            }
+            fs::File::create(&path)?;
+            fs::copy(&self.path, &path).context("Could not copy file")?;
+        } else if self.path.is_dir() {
+            copy_recursively(&self.path, &path).context("Could not copy directory")?;
         }
 
         Ok(())
