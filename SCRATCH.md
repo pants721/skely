@@ -13,6 +13,7 @@
 - [ ] Add default skeleton text
 - [ ] Individual project cfg files
 - [ ] Template word config
+- [ ] Bash completion
 - [x] Add correct error handling (get rid of the 100 std::io::Error's)
 - [x] Add --touch tag for add
 - [x] Choose unwrap_or_else() or Result<>
