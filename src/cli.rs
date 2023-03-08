@@ -45,6 +45,8 @@ pub enum Commands {
         /// Desired project path
         #[arg(required = true)]
         path: PathBuf,
+        /// Optional name, defaults to directory name
+        name: Option<String>,
     },
     /// Removes skeleton
     Remove {
