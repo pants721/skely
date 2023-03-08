@@ -3,7 +3,11 @@
 - [Clap cookbook cargo derive](https://docs.rs/clap/latest/clap/_derive/_cookbook/cargo_example_derive/index.html)
 - [Copy directory recursivley function (common.rs)](https://nick.groenen.me/notes/recursively-copy-files-in-rust/)
 - [Capitalize word function (common.rs)](https://nick.groenen.me/notes/capitalize-a-string-in-rust/)
+- [create_dir_all documentation](https://doc.rust-lang.org/std/fs/fn.create_dir_all.html)
 - [crates.io Publishing](https://doc.rust-lang.org/cargo/reference/publishing.html)
+- [toml formatting](https://toml.io/en/)
+- [Rust file struct](https://doc.rust-lang.org/std/fs/struct.File.html)
+- [Toml crate docs](https://docs.rs/toml/latest/toml/#)
 
 !TODO
 [ ] Add default skeleton text
@@ -13,6 +17,7 @@
 [ ] Interactive dir created for `sk add --dir`
 [x] Proper bin instillation of release
 [x] Non vim text editors
+[x] Settings
 
 # Command Line Interface
 
@@ -33,3 +38,31 @@ sk add rust (todo! maybe interactive dir creator)
 sk add --source rust_sk/
 sk new rust
 sk remove javascript
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# TOML Config Format
+
+```toml
+# Skely config
+
+[config]
+# Default editor is vim
+editor = "vim"
+```
+
+
+

@@ -1,9 +1,9 @@
 use anyhow::{anyhow, Context, Result};
 use colored::*;
 use home::home_dir;
-use std::fs::{self, create_dir};
+use std::fs::{self, File};
 use std::fs::{create_dir_all, OpenOptions};
-use std::io;
+use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -17,11 +17,22 @@ pub fn touch(path: &Path) -> io::Result<()> {
     }
 }
 
-pub fn check_cfg_dir() -> Result<()> {
+pub fn check_cfg() -> Result<()> {
     let path = skeletons_cfg_dir()?;
     if !path.exists() {
-        create_dir_all(skeletons_cfg_dir()?).context("Could not create sk/skeletons directory")?;
-        dbg!(skeletons_cfg_dir()?);
+        create_dir_all(skeletons_cfg_dir()?).context("Could not create config directory")?;
+    }
+
+    let mut cfg_file_path = sk_cfg_dir()?;
+    cfg_file_path.push("config.toml");
+    if !cfg_file_path.exists() {
+        eprintln!("Config file (config.toml) does not exist. Creating...");
+        let mut cfg_file: File = File::create(&cfg_file_path)?;
+        cfg_file.write_all(b"# Skely config\n")?;
+        cfg_file.write_all(b"\n")?;
+        cfg_file.write_all(b"[config]\n")?;
+        cfg_file.write_all(b"# Replace with your editor of choice!\n")?;
+        cfg_file.write_all(b"editor = \"\"\n")?;
     }
     Ok(())
 }
@@ -104,28 +115,44 @@ pub fn copy_recursively(source: impl AsRef<Path>, destination: impl AsRef<Path>)
     Ok(())
 }
 
-pub fn open_editor(arg: &PathBuf) -> Result<()> {
-    #[rustfmt::skip]
-    // Editors (in order)
-    let editors = vec![
-        "nvim",
-        "vim",
-        "hx",
-        "nano",
-        // dont be mad i use emacs, its just slow for these purposes
-        "emacs",
-        "vi",
-    ];
+pub fn open_editor(arg: &PathBuf, editor_opt: &Option<String>) -> Result<()> {
+    match editor_opt {
+        Some(editor) => {
+            let output = Command::new("which")
+                .arg(editor)
+                .output()
+                .context("Failed to execute command")?;
 
-    for editor in editors {
-        let output = Command::new("which")
-            .arg(editor)
-            .output()
-            .context("Failed to execute command")?;
+            if output.status.success() {
+                Command::new(editor).arg(arg).spawn()?.wait()?;
+            } else {
+                return Err(anyhow!("Editor not found"));
+            }
+        },
+        None => {
+            #[rustfmt::skip]
+            // Editors (in order)
+            let editors = vec![
+                "nvim",
+                "vim",
+                "hx",
+                "nano",
+                // dont be mad i use emacs, its just slow for these purposes
+                "emacs",
+                "vi",
+            ];
 
-        if output.status.success() {
-            Command::new(editor).arg(arg).spawn()?.wait()?;
-            break;
+            for editor in editors {
+                let output = Command::new("which")
+                    .arg(editor)
+                    .output()
+                    .context("Failed to execute command")?;
+
+                if output.status.success() {
+                    Command::new(editor).arg(arg).spawn()?.wait()?;
+                    break;
+                }
+            }
         }
     }
     Ok(())

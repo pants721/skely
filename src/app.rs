@@ -3,27 +3,39 @@ use std::fs;
 use std::path::PathBuf;
 
 use crate::cli::Commands;
-use crate::common::{
-    check_cfg_dir, copy_recursively, is_yes, list_skeleton_vec, open_editor, path_buf_to_string,
-    sk_cfg_dir, touch, skeletons_cfg_dir,
-};
+use crate::settings::Settings;
+use crate::common::{copy_recursively, is_yes, list_skeleton_vec, open_editor, path_buf_to_string, touch, skeletons_cfg_dir, check_cfg};
+
 use crate::skeleton::Skeleton;
 
 /// Central data structure for skely
 pub struct App {
     pub items: Vec<Skeleton>,
+    pub settings: Settings,
 }
 
 impl App {
     pub fn new() -> Self {
-        Self { items: Vec::new() }
+         Self { items: Vec::new() , settings: Settings::new() }
     }
 
-    pub fn run(&mut self) -> Result<()> {
-        check_cfg_dir()?;
-        self.get_items_from_dir(skeletons_cfg_dir()?)
-            .context("Could not fetch items from skely config directory")?;
-        Ok(())
+    // pub fn run(&mut self) -> Result<()> {
+    //     check_cfg()?;
+    //     self.settings = Settings::default()?;
+    //     self.get_items_from_dir(skeletons_cfg_dir()?)
+    //         .context("Could not fetch items from skely config directory")?;
+    //     Ok(())
+    // }
+
+    pub fn default() -> Result<Self> {
+        check_cfg()?;
+
+        let mut app: Self = Self::new();
+        app.get_items_from_dir(skeletons_cfg_dir()?)?;
+        app.settings = Settings::default()?;
+
+        Ok(app)
+
     }
 
     pub fn get_items_from_dir(&mut self, path: PathBuf) -> Result<()> {
@@ -64,7 +76,7 @@ impl App {
 
     pub fn edit(&self, skeleton_str: String) -> Result<()> {
         if let Some(skeleton) = self.get_skeleton_by_id(&skeleton_str) {
-            open_editor(&skeleton.path)?;
+            open_editor(&skeleton.path, &self.settings.editor)?;
             Ok(())
         } else {
             Err(anyhow!("Skeleton not found"))
@@ -94,7 +106,7 @@ impl App {
                 }
                 None => {
                     if !touch_var {
-                        open_editor(&path).context("Failed to open editor")?;
+                        open_editor(&path, &self.settings.editor).context("Failed to open editor")?;
                     } else {
                         touch(&path).context("Failed to create file")?;
                     }
