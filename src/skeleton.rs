@@ -1,11 +1,9 @@
-use crate::common::{copy_recursively, touch, path_buf_to_string};
+use crate::common::{copy_recursively, path_buf_to_string};
 // use crate::common::{check_cfg_dir, sk_cfg_dir, touch};
 // use anyhow::Context;
 use anyhow::{Result, Context};
 use std::fs::create_dir_all;
-use std::time::Instant;
 use std::{fs, path::PathBuf};
-use std::io::{Read, Write};
 
 /// Data structure for storing a skeleton project's information
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
