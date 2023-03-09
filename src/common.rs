@@ -31,7 +31,7 @@ pub fn check_cfg() -> Result<()> {
         cfg_file.write_all(b"# Skely config\n")?;
         // replace with a for loop over all settings fields
         cfg_file.write_all(b"editor = \"\"\n")?;
-        cfg_file.write_all(b"placeholder= \"PLACEHOLDER\"\n")?;
+        cfg_file.write_all(b"placeholder = \"PLACEHOLDER\"\n")?;
     }
     Ok(())
 }
