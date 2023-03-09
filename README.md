@@ -20,12 +20,10 @@ cargo install skely
 As of right now, Skely's configuration is very simple. It is one file at `~/.config/config.toml`. The default configuration looks like this:
 ```toml
 # Skely config
-
-[config]
-# Replace with your editor of choice!
 editor = ""
+placeholder = "PLACEHOLDER"
 ```
-As you many have guessed, the only option is the editor you would like Skely to use. The string should contain the proper command to call the editor. For example, if I wanted to use Neovim, I **wouldn't** use `editor = "neovim"`, I **would** use `editor = "nvim` so that Skely can properly execute it.
+As you many have guessed, the editor option is the editor you would like Skely to use. The string should contain the proper command to call the editor. For example, if I wanted to use Neovim, I **wouldn't** use `editor = "neovim"`, I **would** use `editor = "nvim` so that Skely can properly execute it. Placeholder is a bit more complicated. Placeholder is the string that you want to be replaced in all the skeleton files with your project's name. To disable this option simply leave it blank as `""`
 
 ### Configuring New Skeletons
 
