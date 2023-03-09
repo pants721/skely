@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use crate::cli::Commands;
 use crate::settings::Settings;
-use crate::common::{copy_recursively, is_yes, list_skeleton_vec, open_editor, path_buf_to_string, touch, skeletons_cfg_dir, check_cfg};
+use crate::common::{copy_recursively, is_yes, list_skeleton_vec, open_editor, path_buf_to_string, touch, skeletons_cfg_dir, check_cfg, replace_string_in_dir};
 
 use crate::skeleton::Skeleton;
 
@@ -19,19 +19,13 @@ impl App {
          Self { items: Vec::new() , settings: Settings::new() }
     }
 
-    // pub fn run(&mut self) -> Result<()> {
-    //     check_cfg()?;
-    //     self.settings = Settings::default()?;
-    //     self.get_items_from_dir(skeletons_cfg_dir()?)
-    //         .context("Could not fetch items from skely config directory")?;
-    //     Ok(())
-    // }
-
     pub fn default() -> Result<Self> {
         check_cfg()?;
 
         let mut app: Self = Self::new();
-        app.get_items_from_dir(skeletons_cfg_dir()?)?;
+        app.get_items_from_dir(skeletons_cfg_dir()?)
+            .context("Could not fetch items from skely config directory")?;
+
         app.settings = Settings::default()?;
 
         Ok(app)
@@ -62,7 +56,7 @@ impl App {
                 source,
                 touch,
             } => self.add(name, source, touch)?,
-            Commands::New { id, path } => self.new_project(id, path)?,
+            Commands::New { id, path, name } => self.new_project(id, path, name)?,
             Commands::Remove { id } => self.remove(id)?,
         }
 
@@ -116,11 +110,16 @@ impl App {
         }
     }
 
-    pub fn new_project(&self, id: String, path: PathBuf) -> Result<()> {
+    pub fn new_project(&self, id: String, mut path: PathBuf, name: Option<String>) -> Result<()> {
         if path.exists() {
             return Err(anyhow!("Target directory already exists"));
         }
         if let Some(skeleton) = self.get_skeleton_by_id(&id) {
+
+            if path.exists() {
+                return Err(anyhow!("Target directory already exists"));
+            }
+
             if path_buf_to_string(&path) == "." {
                 println!(
                     "This will copy all files in skeleton {id} to your current working directory."
@@ -130,11 +129,22 @@ impl App {
                 std::io::stdin().read_line(&mut input)?;
                 input.truncate(input.len() - 1);
                 if is_yes(&input)? {
-                    skeleton.copy_to_dir(path)?;
+                    skeleton.copy_to_dir(&mut path)?;
                 }
             } else {
-                skeleton.copy_to_dir(path)?;
+                skeleton.copy_to_dir(&mut path)?;
             }
+
+            let project_name = match name {
+                Some(name_val) => name_val,
+                // dont like this
+                None => path.file_name().unwrap().to_os_string().into_string().unwrap(),
+            };
+
+            if let Some(name_val) = self.settings.placeholder.to_owned() {
+                replace_string_in_dir(&path, name_val, project_name)?;
+            };
+
             Ok(())
         } else {
             Err(anyhow!("Skeleton not found"))

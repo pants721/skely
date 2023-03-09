@@ -21,6 +21,7 @@
 - [x] Proper bin instillation of release
 - [x] Non vim text editors
 - [x] Settings
+- [ ] the config/settings/struct for loops
 
 # Command Line Interface
 

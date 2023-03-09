@@ -37,13 +37,13 @@ impl Skeleton {
     }
 
     /// Copy skeleton to specified path
-    pub fn copy_to_dir(&self, mut path: PathBuf) -> Result<()> {
+    pub fn copy_to_dir(&self, path: &mut PathBuf) -> Result<()> {
         if !path.exists() && self.path.is_dir() {
             create_dir_all(&path)?;
         }
 
         if self.path.is_file() {
-            if path_buf_to_string(&path) == "." {
+            if path_buf_to_string(path) == "." {
                 path.push(format!("{}.sk", &self.id));
             }
             fs::File::create(&path)?;
