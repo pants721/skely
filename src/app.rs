@@ -138,11 +138,8 @@ impl App {
                 None => path.file_name().unwrap().to_os_string().into_string().unwrap(),
             };
 
-            match self.settings.placeholder.to_owned() {
-                Some(name_val) => {
-                    replace_string_in_dir(&path, name_val, project_name)?;
-                },
-                None => (),
+            if let Some(name_val) = self.settings.placeholder.to_owned() {
+                replace_string_in_dir(&path, name_val, project_name)?;
             };
 
             Ok(())
