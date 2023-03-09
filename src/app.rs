@@ -114,6 +114,7 @@ impl App {
         if path.exists() {
             return Err(anyhow!("Target directory already exists"));
         }
+
         if let Some(skeleton) = self.get_skeleton_by_id(&id) {
 
             if path.exists() {
