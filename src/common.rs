@@ -1,12 +1,12 @@
 use anyhow::{anyhow, Context, Result};
 use colored::*;
 use home::home_dir;
-use std::fs::{self, File};
-use std::fs::{create_dir_all, OpenOptions};
+use std::fs::{self, create_dir_all, OpenOptions};
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+use crate::settings::Settings;
 use crate::skeleton::Skeleton;
 
 #[allow(dead_code)]
@@ -23,15 +23,9 @@ pub fn check_cfg() -> Result<()> {
         create_dir_all(skeletons_cfg_dir()?).context("Could not create config directory")?;
     }
 
-    let mut cfg_file_path = sk_cfg_dir()?;
-    cfg_file_path.push("config.toml");
-    if !cfg_file_path.exists() {
+    if !cfg_file_dir()?.exists() {
         eprintln!("Config file (config.toml) does not exist. Creating...");
-        let mut cfg_file: File = File::create(&cfg_file_path)?;
-        cfg_file.write_all(b"# Skely config\n")?;
-        // replace with a for loop over all settings fields
-        cfg_file.write_all(b"editor = \"\"\n")?;
-        cfg_file.write_all(b"placeholder = \"PLACEHOLDER\"\n")?;
+        Settings::create_default_cfg_file()?;
     }
     Ok(())
 }
@@ -46,7 +40,10 @@ pub fn replace_string_in_dir(input_path: &PathBuf, from: String, to: String) -> 
         } else {
             let data = fs::read_to_string(dir_entry.as_ref().unwrap().path())?;
             let new = data.replace(&from, &to);
-            let mut file = OpenOptions::new().write(true).truncate(true).open(dir_entry?.path())?;
+            let mut file = OpenOptions::new()
+                .write(true)
+                .truncate(true)
+                .open(dir_entry?.path())?;
             file.write_all(new.as_bytes())?;
         }
     }
@@ -70,6 +67,18 @@ pub fn skeletons_cfg_dir() -> Result<PathBuf> {
     let mut skeletons_dir = sk_cfg_dir()?;
     skeletons_dir.push("skeletons");
     Ok(skeletons_dir)
+}
+
+// pub fn cfg_file_dir() -> Result<PathBuf> {
+//     let mut file_dir = sk_cfg_dir()?;
+//     file_dir.push("config.toml");
+//     Ok(file_dir)
+// }
+
+pub fn cfg_file_dir() -> Result<PathBuf> {
+    let mut file_dir = sk_cfg_dir()?;
+    file_dir.push("config.toml");
+    Ok(file_dir)
 }
 
 pub fn list_skeleton_vec(items: &[Skeleton], verbose: bool) -> Result<()> {
@@ -145,14 +154,14 @@ pub fn open_editor(arg: &PathBuf, editor_opt: &Option<String>) -> Result<()> {
             } else {
                 return Err(anyhow!("Editor not found"));
             }
-        },
+        }
         None => {
             #[rustfmt::skip]
             // Editors (in order)
             let editors = vec![
                 "nvim",
-                "vim",
                 "hx",
+                "vim",
                 "nano",
                 // dont be mad i use emacs, its just slow for these purposes
                 "emacs",

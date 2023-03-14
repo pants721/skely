@@ -7,8 +7,8 @@ use crate::cli::Cli;
 mod app;
 mod cli;
 mod common;
-mod skeleton;
 mod settings;
+mod skeleton;
 
 fn main() -> Result<()> {
     let app: App = App::default()?;

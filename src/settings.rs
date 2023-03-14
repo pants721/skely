@@ -1,10 +1,10 @@
-use serde::Deserialize;
-use std::fs::File;
+use crate::common::{cfg_file_dir, check_cfg};
 use anyhow::Result;
-use std::io::Read;
-use crate::common::{check_cfg, sk_cfg_dir};
+use serde::{Deserialize, Serialize};
+use std::fs::File;
+use std::io::{Read, Write};
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Settings {
     pub editor: Option<String>,
     pub placeholder: Option<String>,
@@ -18,12 +18,16 @@ impl Settings {
         }
     }
 
-    pub fn default() -> Result<Self> {
-        let mut cfg_file_path = sk_cfg_dir()?;
-        cfg_file_path.push("config.toml");
-        check_cfg()?;
+    pub fn default() -> Self {
+        Settings {
+            editor: Some("".to_string()),
+            placeholder: Some("PLACEHOLDER".to_string()),
+        }
+    }
 
-        let mut cfg_file = File::open(cfg_file_path)?;
+    pub fn load() -> Result<Self> {
+        check_cfg()?;
+        let mut cfg_file = File::open(cfg_file_dir()?)?;
         let mut contents = String::new();
         cfg_file.read_to_string(&mut contents)?;
         let mut s: Settings = toml::from_str(&contents)?;
@@ -40,5 +44,16 @@ impl Settings {
             }
         }
         Ok(s)
+    }
+
+    pub fn create_default_cfg_file() -> Result<()> {
+        let settings = Settings::default();
+
+        let serialized = toml::to_string_pretty(&settings)?;
+
+        let mut file = File::create(cfg_file_dir()?)?;
+        file.write_all(serialized.as_bytes())?;
+
+        Ok(())
     }
 }

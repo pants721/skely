@@ -3,8 +3,11 @@ use std::fs;
 use std::path::PathBuf;
 
 use crate::cli::Commands;
+use crate::common::{
+    check_cfg, copy_recursively, is_yes, list_skeleton_vec, open_editor, path_buf_to_string,
+    replace_string_in_dir, skeletons_cfg_dir, touch,
+};
 use crate::settings::Settings;
-use crate::common::{copy_recursively, is_yes, list_skeleton_vec, open_editor, path_buf_to_string, touch, skeletons_cfg_dir, check_cfg, replace_string_in_dir};
 
 use crate::skeleton::Skeleton;
 
@@ -16,7 +19,10 @@ pub struct App {
 
 impl App {
     pub fn new() -> Self {
-         Self { items: Vec::new() , settings: Settings::new() }
+        Self {
+            items: Vec::new(),
+            settings: Settings::new(),
+        }
     }
 
     pub fn default() -> Result<Self> {
@@ -26,10 +32,10 @@ impl App {
         app.get_items_from_dir(skeletons_cfg_dir()?)
             .context("Could not fetch items from skely config directory")?;
 
-        app.settings = Settings::default()?;
+        app.settings = Settings::load()?;
+        Settings::create_default_cfg_file()?;
 
         Ok(app)
-
     }
 
     pub fn get_items_from_dir(&mut self, path: PathBuf) -> Result<()> {
@@ -100,7 +106,8 @@ impl App {
                 }
                 None => {
                     if !touch_var {
-                        open_editor(&path, &self.settings.editor).context("Failed to open editor")?;
+                        open_editor(&path, &self.settings.editor)
+                            .context("Failed to open editor")?;
                     } else {
                         touch(&path).context("Failed to create file")?;
                     }
@@ -116,7 +123,6 @@ impl App {
         }
 
         if let Some(skeleton) = self.get_skeleton_by_id(&id) {
-
             if path.exists() {
                 return Err(anyhow!("Target directory already exists"));
             }
@@ -139,7 +145,12 @@ impl App {
             let project_name = match name {
                 Some(name_val) => name_val,
                 // dont like this
-                None => path.file_name().unwrap().to_os_string().into_string().unwrap(),
+                None => path
+                    .file_name()
+                    .unwrap()
+                    .to_os_string()
+                    .into_string()
+                    .unwrap(),
             };
 
             if let Some(name_val) = self.settings.placeholder.to_owned() {
