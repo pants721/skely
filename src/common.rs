@@ -160,12 +160,15 @@ pub fn open_editor(arg: &PathBuf, editor_opt: &Option<String>) -> Result<()> {
             // Editors (in order)
             let editors = vec![
                 "nvim",
-                "hx",
+                "hx", // helix
                 "vim",
+                "micro",
                 "nano",
-                // dont be mad i use emacs, its just slow for these purposes
-                "emacs",
+                "emacs", // dont be mad, i use emacs, its just slow for these purposes
                 "vi",
+                "pico",
+                "amp",
+                "ne", // nice editor :)
             ];
 
             for editor in editors {
