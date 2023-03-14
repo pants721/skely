@@ -12,7 +12,7 @@
 # TODO
 - [ ] Add default skeleton text
 - [ ] Individual project cfg files
-- [ ] Template word config
+- [x] Template word config
 - [ ] Bash completion
 - [x] Add correct error handling (get rid of the 100 std::io::Error's)
 - [x] Add --touch tag for add
@@ -21,7 +21,7 @@
 - [x] Proper bin instillation of release
 - [x] Non vim text editors
 - [x] Settings
-- [ ] Toml serialization for default config file
+- [x] Toml serialization for default config file
 
 # Command Line Interface
 
