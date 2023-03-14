@@ -96,7 +96,8 @@ impl App {
                 Some(source) => {
                     let mut dest_dir = skeletons_cfg_dir()?;
                     if source.is_dir() {
-                        dest_dir.push(source.components().last().unwrap());
+                        // dest_dir.push(source.components().last().unwrap());
+                        dest_dir.push(&id);
                         copy_recursively(source, dest_dir)
                             .context("Failed to copy directory recursivley")?;
                     } else if source.is_file() {
