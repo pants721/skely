@@ -53,5 +53,8 @@ pub enum Commands {
     Remove {
         /// Id of skeleton to remove
         id: String,
+        /// Removes without confirming
+        #[arg(short, long)]
+        no_confirm: bool,
     },
 }

@@ -63,7 +63,7 @@ impl App {
                 touch,
             } => self.add(name, source, touch)?,
             Commands::New { id, path, name } => self.new_project(id, path, name)?,
-            Commands::Remove { id } => self.remove(id)?,
+            Commands::Remove { id, no_confirm } => self.remove(id, no_confirm)?,
         }
 
         Ok(())
@@ -164,15 +164,18 @@ impl App {
         }
     }
 
-    pub fn remove(&self, id: String) -> Result<()> {
+    pub fn remove(&self, id: String, no_confirm: bool) -> Result<()> {
         if let Some(skeleton) = self.get_skeleton_by_id(&id) {
-            println!(
-                "Are you sure you want to delete {}? (y/n) ",
-                path_buf_to_string(&skeleton.path)
-            );
-            let mut input: String = String::new();
-            std::io::stdin().read_line(&mut input)?;
-            input.truncate(input.len() - 1);
+            let mut input: String = "yes".to_string();
+            if !no_confirm {
+                println!(
+                    "Are you sure you want to delete {}? (y/n) ",
+                    path_buf_to_string(&skeleton.path)
+                );
+                std::io::stdin().read_line(&mut input)?;
+                input.truncate(input.len() - 1);
+            }
+
             if is_yes(&input)? {
                 match skeleton.path.is_file() {
                     true => fs::remove_file(&skeleton.path)?,

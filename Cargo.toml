@@ -23,6 +23,11 @@ colored = "2.0.0"
 serde = {version = "1.0.152", features = [ "derive" ]}
 toml = "0.7.2"
 
+[dev-dependencies]
+assert_cmd = "2.0.8"
+predicates = "2.1.5"
+assert_fs = "1.0.10"
+
 [[bin]]
 name = "sk"
 path = "src/main.rs"

@@ -8,6 +8,8 @@
 - [toml formatting](https://toml.io/en/)
 - [Rust file struct](https://doc.rust-lang.org/std/fs/struct.File.html)
 - [Toml crate docs](https://docs.rs/toml/latest/toml/#)
+- [Command Line Application testing](https://rust-cli.github.io/book/tutorial/testing.html)
+- [Test driven development](https://en.wikipedia.org/wiki/Test-driven_development)
 
 # TODO
 - [ ] Add default skeleton text
@@ -22,6 +24,8 @@
 - [x] Non vim text editors
 - [x] Settings
 - [x] Toml serialization for default config file
+- [ ] Unit testing / Integration testing
+- [ ] Add -s option to name the new directory after source directory
 
 # Command Line Interface
 
