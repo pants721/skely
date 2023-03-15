@@ -1,78 +1,83 @@
-use anyhow::{Context, Result};
+use anyhow::{Result, Context};
 use assert_cmd::prelude::*; // Add methods on commands
 use assert_fs::prelude::*;
 use home::home_dir;
 use predicates::prelude::*; // Used for writing assertions
 use std::{
-    fs::{read_dir, read_to_string, remove_file, File},
-    path::PathBuf,
-    process::Command,
+    fs::{read_to_string, remove_file, read_dir},
+    path::{PathBuf, Path},
+    process::Command, collections::HashSet,
 }; // Run programs
 
-#[test]
-fn file_doesnt_exist() -> Result<()> {
-    // sk edit ajfklsdjfkadsf
-    let mut cmd = Command::cargo_bin("sk")?;
+// - List                       - List all configured skeletons
+// - Edit <Skeleton>            - Edit a skeleton
+// - Add <Name>                 - Configure new skeleton
+// - Add <Name> --source <Path> - Configure new skeleton from path
+// - New <Path>                 - Copy skeleton to specified directory
+// - Remove <Skeleton>          - Remove configured skeleton and its files
 
-    cmd.arg("edit")
-        .arg("dlsdjlasdasdlasdlasldlasasdlasdlldlasldasd");
-    cmd.assert()
-        .failure()
-        .stderr(predicate::str::contains("Error: Skeleton not found"));
-
-    Ok(())
+mod list_tests {
+    use super::*;
 }
 
-#[test]
-/// Creates empty skeleton at TEST_FILE.sk and removes it
-fn add_touch() -> Result<()> {
-    let mut add_cmd = Command::cargo_bin("sk")?;
-    add_cmd.arg("add").arg("TEST_FILE").arg("-t");
-    add_cmd.assert().success();
+mod edit_tests {
+    use super::*;
 
-    let sk_file: PathBuf = PathBuf::from(format!(
-        "{}/.config/sk/skeletons/TEST_FILE.sk",
-        home_dir().unwrap().display()
-    ));
+    #[test]
+    fn edit_file_doesnt_exist() -> Result<()> {
+        let skeleton_dir: PathBuf = PathBuf::from(format!(
+            "{}/.config/sk/skeletons",
+            home_dir().unwrap().display()
+        ));
 
-    assert!(sk_file.exists());
-    assert!(sk_file.as_os_str().is_empty());
+        let filename = find_shortest_nonfilenames(&skeleton_dir)?;
 
-    // let mut rm_cmd = Command::cargo_bin("sk")?;
-    // rm_cmd.arg("remove").arg("TEST_FILE").arg("-n");
-    // rm_cmd.assert()
-    //     .success();
+        let mut cmd = Command::cargo_bin("sk")?;
 
-    Ok(())
-}
+        cmd.arg("edit")
+            .arg(filename);
+        cmd.assert()
+            .failure()
+            .stderr(predicate::str::contains("Error: Skeleton not found"));
 
-#[test]
-fn add_from_source() -> Result<()> {
-    let file = assert_fs::NamedTempFile::new("sample.txt")?;
-    file.write_str("A test\nActual content\nMore content\nAnother test")?;
-
-    let sk_file: PathBuf = PathBuf::from(format!(
-        "{}/.config/sk/skeletons/TEST_FILE.sk",
-        home_dir().unwrap().display()
-    ));
-
-    if sk_file.exists() {
-        remove_file(&sk_file)?;
+        Ok(())
     }
+}
 
-    let mut add_cmd = Command::cargo_bin("sk")?;
-    add_cmd
-        .arg("add")
-        .arg("-s")
-        .arg(file.path())
-        .arg("TEST_FILE");
-    add_cmd.assert().success();
+mod add_tests {
+    use super::*;
+    use anyhow::Context;
 
-    assert!(file_eq(file.to_path_buf(), sk_file.clone())?);
+    #[test]
+    /// Creates empty skeleton at TEST_FILE.sk and removes it
+    fn add_touch() -> Result<()> {
+        let sk_file: PathBuf = PathBuf::from(format!(
+            "{}/.config/sk/skeletons/TEST_FILE.sk",
+            home_dir().unwrap().display()
+        ));
 
-    remove_file(&sk_file)?;
+        if sk_file.exists() {
+            remove_file(&sk_file)?;
+        }
 
-    Ok(())
+        let mut add_cmd = Command::cargo_bin("sk")?;
+        add_cmd.arg("add").arg("TEST_FILE").arg("-t");
+        add_cmd.assert().success();
+
+        assert!(sk_file.exists());
+
+        remove_file(&sk_file)?;
+
+        Ok(())
+    }
+}
+
+mod new_tests {
+    use super::*;
+}
+
+mod remove_tests {
+    use super::*;
 }
 
 //
@@ -80,8 +85,70 @@ fn add_from_source() -> Result<()> {
 //
 
 fn file_eq(file1: PathBuf, file2: PathBuf) -> Result<bool> {
-    let file1_string: String = read_to_string(file1)?;
-    let file2_string: String = read_to_string(file2)?;
+    assert!(file1.exists());
+    assert!(file2.exists());
+    let file1_string: String = read_to_string(file1).context("file1 error")?;
+    let file2_string: String = read_to_string(file2).context("file2 error")?;
 
     Ok(file1_string == file2_string)
 }
+
+fn find_shortest_nonfilenames(dir: &Path) -> Result<String> {
+    let mut filenames = HashSet::new();
+
+    // Iterate through all entries in the directory
+        for entry in read_dir(dir)? {
+            let entry = entry?;
+            if entry.file_type()?.is_file() {
+                // If it's a file, add the file name to the set of filenames
+                let filename = entry.file_name().to_string_lossy().into_owned();
+                filenames.insert(filename);
+            }
+        }
+
+    // Iterate through all possible strings of increasing length until
+    // we find a string that is not a filename
+    for len in 1.. {
+        for s in generate_strings(len) {
+            if !filenames.contains(&s) {
+                return Ok(s);
+            }
+        }
+    }
+
+    // We should never get here
+    unreachable!()
+}
+
+fn generate_strings(len: usize) -> Vec<String> {
+    let mut result = Vec::new();
+    let chars = (b'!'..=b'~').map(char::from).collect::<Vec<_>>();
+    generate_strings_rec(&chars, len, &mut result, String::new());
+    result
+}
+
+fn generate_strings_rec(
+    chars: &[char],
+    len: usize,
+    result: &mut Vec<String>,
+    prefix: String,
+) {
+    if prefix.len() == len {
+        result.push(prefix);
+        return;
+    }
+    for c in chars {
+        let mut new_prefix = prefix.clone();
+        new_prefix.push(*c);
+        generate_strings_rec(chars, len, result, new_prefix);
+    }
+}
+
+
+
+
+
+
+
+
+

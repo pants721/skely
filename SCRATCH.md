@@ -26,6 +26,7 @@
 - [x] Toml serialization for default config file
 - [ ] Unit testing / Integration testing
 - [ ] Add -s option to name the new directory after source directory
+- [ ] Add error if --source for sk add doesn't exist
 
 # Command Line Interface
 
