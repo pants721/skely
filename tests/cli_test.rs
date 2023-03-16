@@ -18,6 +18,24 @@ use std::{
 
 mod list_tests {
     use super::*;
+
+    #[test]
+    fn list_basic() -> Result<()> {
+        let mut list_cmd = Command::cargo_bin("sk")?;
+        list_cmd.arg("list");
+        list_cmd.assert().success();
+
+        Ok(())
+    }
+
+    #[test]
+    fn list_verbose() -> Result<()> {
+        let mut list_cmd = Command::cargo_bin("sk")?;
+        list_cmd.arg("list").arg("-v");
+        list_cmd.assert().success();
+
+        Ok(())
+    }
 }
 
 mod edit_tests {
@@ -74,6 +92,8 @@ mod add_tests {
 
 mod new_tests {
     use super::*;
+
+    // for these there has to be some complicated skeleton created uniquely for testing in code so ill implement that later
 }
 
 mod remove_tests {
@@ -93,6 +113,7 @@ fn file_eq(file1: PathBuf, file2: PathBuf) -> Result<bool> {
     Ok(file1_string == file2_string)
 }
 
+// I'm proud of this algorithm
 fn find_shortest_nonfilenames(dir: &Path) -> Result<String> {
     let mut filenames = HashSet::new();
 
