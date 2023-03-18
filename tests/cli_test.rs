@@ -92,8 +92,6 @@ mod add_tests {
 
 mod new_tests {
     use super::*;
-
-    // for these there has to be some complicated skeleton created uniquely for testing in code so ill implement that later
 }
 
 mod remove_tests {
@@ -163,12 +161,3 @@ fn generate_strings_rec(
         generate_strings_rec(chars, length, names, new_prefix);
     }
 }
-
-
-
-
-
-
-
-
-
