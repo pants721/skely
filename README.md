@@ -3,6 +3,8 @@
 
 **DISCLAIMER: Skely was created for personal use. Contributions are appreciated, but this is a personal project at heart, so don't take it to seriously.**
 
+Update: Skely is most likely done with development. It works for what I need it to do, so unless something comes up that I need it to do, I'm probably done with this project. Thanks all!
+
 ## About
 
 Skely is very simple. All it does is copy a given template file or directory from `~.config/sk` to a specified directory.
