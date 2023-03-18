@@ -27,6 +27,7 @@
 - [ ] Unit testing / Integration testing
 - [ ] Add -s option to name the new directory after source directory
 - [ ] Add error if --source for sk add doesn't exist
+- [ ] More in depth list tests
 
 # Command Line Interface
 
