@@ -118,7 +118,12 @@ impl App {
         }
     }
 
-    pub fn new_project(&self, id: String, mut path: PathBuf, name: Option<String>) -> Result<()> {
+    pub fn new_project(&self, id: String, path: Option<PathBuf>, name: Option<String>) -> Result<()> {
+        let mut path = match path {
+            Some(p) => p,
+            None => PathBuf::from(&id),
+        };
+
         if path.exists() {
             return Err(anyhow!("Target directory already exists"));
         }

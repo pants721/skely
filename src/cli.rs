@@ -43,8 +43,7 @@ pub enum Commands {
         #[arg(required = true)]
         id: String,
         /// Desired project path
-        #[arg(required = true)]
-        path: PathBuf,
+        path: Option<PathBuf>,
         /// Optional name, defaults to directory name
         #[arg(short, long)]
         name: Option<String>,
