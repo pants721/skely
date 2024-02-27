@@ -9,6 +9,7 @@ mod cli;
 mod common;
 mod settings;
 mod skeleton;
+mod file_util;
 
 fn main() -> Result<()> {
     let app: App = App::default()?;

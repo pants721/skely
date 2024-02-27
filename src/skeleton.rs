@@ -1,7 +1,5 @@
-use crate::common::{copy_recursively, path_buf_to_string};
-// use crate::common::{check_cfg_dir, sk_cfg_dir, touch};
-// use anyhow::Context;
 use anyhow::{Context, Result};
+use crate::file_util;
 use std::fs::create_dir_all;
 use std::{fs, path::PathBuf};
 
@@ -43,13 +41,13 @@ impl Skeleton {
         }
 
         if self.path.is_file() {
-            if path_buf_to_string(path) == "." {
+            if file_util::path_buf_to_string(path) == "." {
                 path.push(format!("{}.sk", &self.id));
             }
             fs::File::create(&path)?;
             fs::copy(&self.path, &path).context("Could not copy file")?;
         } else if self.path.is_dir() {
-            copy_recursively(&self.path, &path).context("Could not copy directory")?;
+            file_util::copy_recursively(&self.path, &path).context("Could not copy directory")?;
         }
 
         Ok(())

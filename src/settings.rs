@@ -1,8 +1,8 @@
-use crate::common::{cfg_file_dir, check_cfg};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::{Read, Write};
+use std::path::PathBuf;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Settings {
@@ -25,9 +25,8 @@ impl Settings {
         }
     }
 
-    pub fn load() -> Result<Self> {
-        check_cfg()?;
-        let mut cfg_file = File::open(cfg_file_dir()?)?;
+    pub fn load(cfg_path: PathBuf) -> Result<Self> {
+        let mut cfg_file = File::open(cfg_path)?;
         let mut contents = String::new();
         cfg_file.read_to_string(&mut contents)?;
         let mut s: Settings = toml::from_str(&contents)?;
@@ -46,12 +45,12 @@ impl Settings {
         Ok(s)
     }
 
-    pub fn create_default_cfg_file() -> Result<()> {
+    pub fn create_default_cfg_file(path: PathBuf) -> Result<()> {
         let settings = Settings::default();
 
         let serialized = toml::to_string_pretty(&settings)?;
 
-        let mut file = File::create(cfg_file_dir()?)?;
+        let mut file = File::create(path)?;
         file.write_all(serialized.as_bytes())?;
 
         Ok(())
