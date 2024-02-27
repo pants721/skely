@@ -4,7 +4,7 @@ use std::fs::{self, create_dir_all};
 use std::path::PathBuf;
 
 use crate::cli::Commands;
-use crate::common::is_yes;
+use crate::cli_util::is_yes;
 use crate::file_util;
 use crate::settings::Settings;
 

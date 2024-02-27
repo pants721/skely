@@ -6,7 +6,7 @@ use crate::cli::Cli;
 
 mod app;
 mod cli;
-mod common;
+mod cli_util;
 mod settings;
 mod skeleton;
 mod file_util;
