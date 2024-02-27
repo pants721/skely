@@ -2,8 +2,11 @@ use std::{fs, io::Write, path::{Path, PathBuf}, process::Command};
 
 use anyhow::{anyhow, Context, Result};
 
-pub fn path_buf_to_string(p: &PathBuf) -> String {
-    p.to_path_buf().into_os_string().into_string().unwrap()
+pub fn path_buf_to_string(p: &PathBuf) -> Result<String> {
+    match p.to_str() {
+        Some(s) => Ok(s.to_string()),
+        None => Err(anyhow!("Could not convert string to PathBuf")),
+    }
 }
 
 pub fn touch(path: &PathBuf) -> Result<()> {
@@ -14,20 +17,15 @@ pub fn touch(path: &PathBuf) -> Result<()> {
 }
 
 pub fn tilda_ize_path_str(item: &str) -> Result<String> {
-    if let Some(path_buf) = home::home_dir() {
-        if let Some(str_opt) = path_buf.as_os_str().to_str() {
-            Ok(item.replace(str_opt, "~"))
-        } else {
-            Err(anyhow!("Could not convert path_buf to &str"))
-        }
-    } else {
-        Err(anyhow!("Could not extract value from Option<Pathbuf>"))
-    }
+    // TODO: Validate item
+    let home_dir = home::home_dir().context("Could not get home directory")?;
+    let home_str = path_buf_to_string(&home_dir)?;
+    Ok(item.replace(&home_str, "~"))
 }
 
 pub fn copy_recursively(source: impl AsRef<Path>, destination: impl AsRef<Path>) -> Result<()> {
     fs::create_dir_all(&destination)?;
-    for entry in fs::read_dir(source)? {
+    for entry in fs::read_dir(&source)? {
         let entry = entry?;
         let filetype = entry.file_type()?;
         if filetype.is_dir() {
@@ -36,16 +34,16 @@ pub fn copy_recursively(source: impl AsRef<Path>, destination: impl AsRef<Path>)
             fs::copy(entry.path(), destination.as_ref().join(entry.file_name()))?;
         }
     }
+
     Ok(())
 }
 
-pub fn open_editor(arg: &PathBuf, editor_opt: &Option<String>) -> Result<()> {
-    match editor_opt {
+pub fn open_editor(arg: &PathBuf, editor: &Option<String>) -> Result<()> {
+    match editor {
         Some(editor) => {
             let output = Command::new("which")
                 .arg(editor)
-                .output()
-                .context("Failed to execute command")?;
+                .output()?;
 
             if output.status.success() {
                 Command::new(editor).arg(arg).spawn()?.wait()?;
@@ -55,7 +53,6 @@ pub fn open_editor(arg: &PathBuf, editor_opt: &Option<String>) -> Result<()> {
         }
         None => {
             // TODO: use $EDITOR
-            #[rustfmt::skip]
             // Editors (in order)
             let editors = vec![
                 "nvim",

@@ -22,6 +22,7 @@ anyhow = "^1.0.72"
 colored = "^2.0.4"
 serde = {version = "^1.0.183", features = [ "derive" ]}
 toml = "^0.7.6"
+itertools = "0.12.1"
 
 [dev-dependencies]
 assert_cmd = "^2.0.12"
