@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use crate::file_util;
 use std::fs::create_dir_all;
 use std::{fs, path::PathBuf};
@@ -22,17 +22,17 @@ impl Skeleton {
     // }
 
     /// Constructor for a skeleton from a specified path
-    pub fn from_path_buf(path: PathBuf) -> Self {
-        let mut trimmed_file_name = String::new();
+    pub fn from_path_buf(path: PathBuf) -> Result<Self> {
         if let Some(file_name) = path.file_name() {
-            trimmed_file_name = file_name.to_string_lossy().replace(".sk", "");
-        }
-
-        Self {
-            id: trimmed_file_name,
-            path,
+            Ok(Self {
+                id: file_name.to_string_lossy().replace(".sk", ""),
+                path,
+            })
+        } else {
+            Err(anyhow!("Could not find .sk file at path {:.?}", path))
         }
     }
+
 
     /// Copy skeleton to specified path
     pub fn copy_to_dir(&self, path: &mut PathBuf) -> Result<()> {
@@ -41,7 +41,7 @@ impl Skeleton {
         }
 
         if self.path.is_file() {
-            if file_util::path_buf_to_string(path) == "." {
+            if file_util::path_buf_to_string(path)? == "." {
                 path.push(format!("{}.sk", &self.id));
             }
             fs::File::create(&path)?;
