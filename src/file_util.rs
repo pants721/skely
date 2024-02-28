@@ -1,4 +1,4 @@
-use std::{fs, io::Write, path::{Path, PathBuf}, process::Command};
+use std::{fs, io::Write, path::{Path, PathBuf}, process::Command, env};
 
 use anyhow::{anyhow, Context, Result};
 
@@ -48,36 +48,16 @@ pub fn open_editor(arg: &PathBuf, editor: &Option<String>) -> Result<()> {
             if output.status.success() {
                 Command::new(editor).arg(arg).spawn()?.wait()?;
             } else {
-                return Err(anyhow!("Editor not found"));
+                return Err(anyhow!(format!("Editor \"{}\" not found", editor)));
             }
         }
         None => {
-            // TODO: use $EDITOR
-            // Editors (in order)
-            let editors = vec![
-                "nvim",
-                "hx", // helix
-                "vim",
-                "micro",
-                "nano",
-                "emacs", // dont be mad, i use emacs, its just slow for these purposes
-                "vi",
-                "pico",
-                "amp",
-                "ne", // nice editor :)
-            ];
-
-            for editor in editors {
-                let output = Command::new("which")
-                    .arg(editor)
-                    .output()
-                    .context("Failed to execute command")?;
-
-                if output.status.success() {
-                    Command::new(editor).arg(arg).spawn()?.wait()?;
-                    break;
-                }
-            }
+            let editor = env::var_os("EDITOR").unwrap_or("vim".into());
+            Command::new(editor)
+                .arg(arg)
+                .spawn()
+                .context("$EDITOR enviroment variable is set incorrectly")?
+                .wait()?;
         }
     }
     Ok(())
