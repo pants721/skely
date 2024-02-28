@@ -1,10 +1,11 @@
 use anyhow::{anyhow, Context, Result};
 use colored::Colorize;
+use itertools::Itertools;
 use std::fs::{self, create_dir_all};
 use std::path::PathBuf;
 
 use crate::cli::Commands;
-use crate::cli_util::is_yes;
+use crate::cli_util::{self, is_yes};
 use crate::file_util;
 use crate::settings::Settings;
 
@@ -40,7 +41,7 @@ impl App {
     pub fn create_config() -> Result<()> {
         let path = Self::skeletons_path()?;
         if !path.exists() {
-            create_dir_all(Self::skeletons_path()?).context("Could not create config directory")?;
+            create_dir_all(path).context("Could not create config directory")?;
         }
 
         if !Self::config_file_path()?.exists() {
@@ -51,14 +52,11 @@ impl App {
     }
 
     pub fn config_path() -> Result<PathBuf> {
-        let mut path: PathBuf = PathBuf::new();
-        if let Some(home_dir_path) = home::home_dir() {
-            path.push(home_dir_path);
-            path.push(".config");
-            path.push("sk");
-            Ok(path)
-        } else {
-            Err(anyhow!("Could not fetch home directory"))
+        match home::home_dir() {
+            Some(home) => {
+                Ok([home, ".config".into(), "sk".into()].iter().collect()) 
+            },
+            None => Err(anyhow!("Could not fetch home directory")),
         }
     }
 
@@ -77,10 +75,19 @@ impl App {
     pub fn items_from_dir(&mut self, path: PathBuf) -> Result<()> {
         let paths = fs::read_dir(path)?;
 
-        for dir_entry_res in paths {
-            let item_path_buf = dir_entry_res?.path();
-            self.items.push(Skeleton::from_path_buf(item_path_buf));
-        }
+        // for dir_entry_res in paths {
+        //     let item_path_buf = dir_entry_res?.path();
+        //     self.items.push(Skeleton::from_path_buf(item_path_buf)?);
+        // }
+        // FIXME: Really bad code
+        self.items.extend(
+            paths.into_iter()
+            .map_ok(|dir_entry| dir_entry.path())
+            .filter_map(|x| x.ok())
+            .map(|path| Skeleton::from_path_buf(path))
+            .filter_map(|x| x.ok())
+        );
+
 
         Ok(())
     }
@@ -111,47 +118,42 @@ impl App {
     }
 
     pub fn edit(&self, skeleton_str: String) -> Result<()> {
-        if let Some(skeleton) = self.skeleton_by_id(&skeleton_str) {
-            file_util::open_editor(&skeleton.path, &self.settings.editor)?;
-            Ok(())
-        } else {
-            Err(anyhow!("Skeleton not found"))
+        match self.skeleton_by_id(&skeleton_str) {
+            Some(skeleton) => file_util::open_editor(&skeleton.path, &self.settings.editor),
+            None => Err(anyhow!("Skeleton not found")),
         }
     }
 
-    pub fn add(&self, id: String, source: Option<PathBuf>, touch_var: bool) -> Result<()> {
+    pub fn add(&self, id: String, source: Option<PathBuf>, touch: bool) -> Result<()> {
         let mut path: PathBuf = Self::skeletons_path()?;
-        path.push(format!("{id}.sk"));
-        if path.exists() {
-            Err(anyhow!(format!(
+        path.push(&id);
+
+        if (path.exists() && path.is_dir()) || path.with_extension("sk").exists() {
+            return Err(anyhow!(format!(
                 "Skeleton at {} already exists",
-                file_util::path_buf_to_string(&path)
-            )))
-        } else {
-            match source {
-                Some(source) => {
-                    let mut dest_dir = Self::skeletons_path()?;
-                    if source.is_dir() {
-                        // dest_dir.push(source.components().last().unwrap());
-                        dest_dir.push(&id);
-                        file_util::copy_recursively(source, dest_dir)
-                            .context("Failed to copy directory recursivley")?;
-                    } else if source.is_file() {
-                        dest_dir.push(format!("{id}.sk"));
-                        fs::copy(source, dest_dir)?;
-                    }
-                }
-                None => {
-                    if !touch_var {
-                        file_util::open_editor(&path, &self.settings.editor)
-                            .context("Failed to open editor")?;
-                    } else {
-                        file_util::touch(&path).context("Failed to create file")?;
-                    }
+                file_util::path_buf_to_string(&path)?
+            )));
+        } 
+
+        match source {
+            Some(source) => {
+                if source.is_dir() {
+                    file_util::copy_recursively(source, path)
+                        .context("Failed to copy directory to skely folder")?;
+                } else if source.is_file() {
+                    fs::copy(source, path.with_extension("sk"))?;
                 }
             }
-            Ok(())
+            None => {
+                if !touch {
+                    file_util::open_editor(&path, &self.settings.editor)
+                        .context("Failed to open editor")?;
+                } else {
+                    file_util::touch(&path.with_extension("sk")).context("Failed to create file")?;
+                }
+            }
         }
+        Ok(())
     }
 
     pub fn new_project(&self, id: String, path: Option<PathBuf>, name: Option<String>) -> Result<()> {
@@ -164,68 +166,61 @@ impl App {
             return Err(anyhow!("Target directory already exists"));
         }
 
-        if let Some(skeleton) = self.skeleton_by_id(&id) {
-            if path.exists() {
-                return Err(anyhow!("Target directory already exists"));
-            }
+        match self.skeleton_by_id(&id) {
+            Some(skeleton) => {
+                if file_util::path_buf_to_string(&path)? == "." {
+                    println!(
+                        "This will copy all files in skeleton {id} to your current working directory."
+                        );
+                    println!("Are you sure you want to do this? (y/n) ");
 
-            if file_util::path_buf_to_string(&path) == "." {
-                println!(
-                    "This will copy all files in skeleton {id} to your current working directory."
-                );
-                println!("Are you sure you want to do this? (y/n) ");
-                let mut input: String = String::new();
-                std::io::stdin().read_line(&mut input)?;
-                input.truncate(input.len() - 1);
-                if is_yes(&input)? {
+                    let mut input: String = String::new();
+                    std::io::stdin().read_line(&mut input)?;
+                    input.truncate(input.len() - 1);
+
+                    if is_yes(&input)? {
+                        skeleton.copy_to_dir(&mut path)?;
+                    }
+                } else {
                     skeleton.copy_to_dir(&mut path)?;
                 }
-            } else {
-                skeleton.copy_to_dir(&mut path)?;
-            }
 
-            let project_name = match name {
-                Some(name_val) => name_val,
-                // dont like this
-                None => path
-                    .file_name()
-                    .unwrap()
-                    .to_os_string()
-                    .into_string()
-                    .unwrap(),
-            };
+                // FIXME: Bad
+                let project_name = name.unwrap_or(path.file_name().unwrap().to_str().unwrap().to_string());
+                match &self.settings.placeholder {
+                    Some(placeholder) => {
+                        file_util::replace_string_in_dir(&path, placeholder.to_string(), project_name)?;
+                    }
+                    None => ()
+                };
+                Ok(())
+            },
+            None => Err(anyhow!("Skeleton not found")),
 
-            if let Some(name_val) = self.settings.placeholder.to_owned() {
-                file_util::replace_string_in_dir(&path, name_val, project_name)?;
-            };
-
-            Ok(())
-        } else {
-            Err(anyhow!("Skeleton not found"))
         }
     }
 
     pub fn remove(&self, id: String, no_confirm: bool) -> Result<()> {
-        if let Some(skeleton) = self.skeleton_by_id(&id) {
-            let mut input: String = "yes".to_string();
-            if !no_confirm {
-                println!(
-                    "Are you sure you want to delete {}? (y/n) ",
-                    file_util::path_buf_to_string(&skeleton.path)
-                );
-                std::io::stdin().read_line(&mut input)?;
-                input.truncate(input.len() - 1);
-            }
-
-            if is_yes(&input)? {
+        match self.skeleton_by_id(&id) {
+            Some(skeleton) => {
+                if !no_confirm {
+                    let mut input = String::new();
+                    println!(
+                        "Are you sure you want to delete {}? (y/n) ",
+                        file_util::path_buf_to_string(&skeleton.path)?
+                        );
+                    std::io::stdin().read_line(&mut input)?;
+                    if !cli_util::is_yes(&input)? {
+                        return Ok(());
+                    }
+                }
                 match skeleton.path.is_file() {
                     true => fs::remove_file(&skeleton.path)?,
                     false => fs::remove_dir_all(&skeleton.path)?,
                 }
-            }
-            Ok(())
-        } else {
-            Err(anyhow!("Skeleton not found"))
+                Ok(())
+            },
+            None => Err(anyhow!("Skeleton not found")),
         }
     }
 
