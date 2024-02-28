@@ -65,21 +65,32 @@ pub fn open_editor(arg: &PathBuf, editor: &Option<String>) -> Result<()> {
 
 // Spaghetti code FIX PLEASE
 pub fn replace_string_in_dir(input_path: &PathBuf, from: String, to: String) -> Result<()> {
+    if input_path.is_file() {
+        replace_string_in_file(input_path, from.clone(), to.clone())?;
+        return Ok(());
+    }
+
     let paths = fs::read_dir(input_path)?;
 
     for dir_entry in paths {
         if dir_entry.as_ref().unwrap().path().is_dir() {
             replace_string_in_dir(&dir_entry?.path(), from.clone(), to.clone())?;
         } else {
-            let data = fs::read_to_string(dir_entry.as_ref().unwrap().path())?;
-            let new = data.replace(&from, &to);
-            let mut file = fs::OpenOptions::new()
-                .write(true)
-                .truncate(true)
-                .open(dir_entry?.path())?;
-            file.write_all(new.as_bytes())?;
+            replace_string_in_file(&dir_entry?.path(), from.clone(), to.clone())?;
         }
     }
+
+    Ok(())
+}
+
+pub fn replace_string_in_file(path: &PathBuf, from: String, to: String) -> Result<()> {
+    let data = fs::read_to_string(path)?;
+    let new = data.replace(&from, &to);
+    let mut file = fs::OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .open(path)?;
+    file.write_all(new.as_bytes())?;
 
     Ok(())
 }

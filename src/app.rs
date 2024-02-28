@@ -146,7 +146,7 @@ impl App {
             }
             None => {
                 if !touch {
-                    file_util::open_editor(&path, &self.settings.editor)
+                    file_util::open_editor(&path.with_extension("sk"), &self.settings.editor)
                         .context("Failed to open editor")?;
                 } else {
                     file_util::touch(&path.with_extension("sk")).context("Failed to create file")?;
@@ -178,12 +178,11 @@ impl App {
                     std::io::stdin().read_line(&mut input)?;
                     input.truncate(input.len() - 1);
 
-                    if is_yes(&input)? {
-                        skeleton.copy_to_dir(&mut path)?;
+                    if !is_yes(&input)? {
+                        return Ok(());
                     }
-                } else {
-                    skeleton.copy_to_dir(&mut path)?;
-                }
+                } 
+                skeleton.copy_to_dir(&mut path)?;
 
                 // FIXME: Bad
                 let project_name = name.unwrap_or(path.file_name().unwrap().to_str().unwrap().to_string());
