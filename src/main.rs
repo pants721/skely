@@ -130,18 +130,6 @@ fn remove(id: String, no_confirm: bool) -> Result<()> {
         return Err(anyhow!("Could not find skeleton"));
     }
 
-    if !no_confirm {
-        let mut input = String::new();
-        println!(
-            "Are you sure you want to delete {}? (y/n) ",
-            path_buf_to_string(&skeleton_path)?
-            );
-        std::io::stdin().read_line(&mut input)?;
-        if input != "y" {
-            return Ok(());
-        }
-    }
-
     match skeleton_path.is_file() {
         true => fs::remove_file(&skeleton_path)?,
         false => fs::remove_dir_all(&skeleton_path)?,
