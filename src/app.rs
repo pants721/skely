@@ -2,6 +2,7 @@ use anyhow::{anyhow, Context, Result};
 use colored::Colorize;
 use itertools::Itertools;
 use std::fs::{self, create_dir_all};
+use std::io::{stdout, Write};
 use std::path::PathBuf;
 
 use crate::cli::Commands;
@@ -113,7 +114,7 @@ impl App {
     }
 
     pub fn list(&self, verbose: bool) -> Result<()> {
-        self.print_skeletons(verbose)?;
+        self.print_skeletons(verbose, stdout())?;
         Ok(())
     }
 
@@ -224,7 +225,7 @@ impl App {
     }
 
     // TODO: Pass writer
-    pub fn print_skeletons(&self, verbose: bool) -> Result<()> {
+    pub fn print_skeletons(&self, verbose: bool, mut writer: impl Write) -> Result<()> {
         for item in self.items.iter() {
             if let Some(item_path) = item.path.to_str() {
                 let single_file_str: &str;
@@ -237,17 +238,18 @@ impl App {
                     id_styled = item.id.to_string().blue().bold();
                 };
                 if !verbose {
-                    print!("{}  ", &id_styled);
+                    write!(writer, "{}  ", &id_styled)?;
                     if item == self.items.iter().last().unwrap() {
-                        println!();
+                        writeln!(writer)?;
                     }
                 } else if verbose {
-                    println!(
+                    writeln!(
+                        writer,
                         "  {} [{}]: {}",
                         &id_styled,
                         file_util::tilda_ize_path_str(item_path)?,
                         single_file_str
-                        );
+                        )?;
                 }
             }
         }
