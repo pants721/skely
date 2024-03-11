@@ -13,12 +13,6 @@ mod cli;
 mod util;
 
 fn main() -> Result<()> {
-    run()?;
-
-    Ok(())
-}
-
-fn run() -> Result<()> {
     let args = Cli::parse(); 
     match args.command {
         Commands::Add { id, source } => add(source, id)?,
