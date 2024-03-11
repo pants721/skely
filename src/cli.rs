@@ -15,27 +15,15 @@ pub struct Cli {
 #[derive(Debug, PartialEq, Subcommand)]
 pub enum Commands {
     /// Lists all configured skeletons
-    List {
-        #[arg(short, long)]
-        verbose: bool,
-    },
-    /// Opens skeleton to edit
-    #[command(arg_required_else_help = true)]
-    Edit {
-        /// Id of skeleton to edit
-        id: String,
-    },
+    List,
     /// Adds skeleton to configured skeletons
     Add {
-        /// Name of skeleton
+        /// Source to create skeleton from
         #[arg(required = true)]
-        name: String,
-        /// Optional source to create skeleton from
+        source: PathBuf,
+        /// Identifier of skeleton
         #[arg(short, long)]
-        source: Option<PathBuf>,
-        /// Creates .sk file without opening editor
-        #[arg(short, long)]
-        touch: bool,
+        id: Option<String>,
     },
     /// Creates a new project from specified skeleton
     New {
@@ -43,6 +31,7 @@ pub enum Commands {
         #[arg(required = true)]
         id: String,
         /// Desired project path
+        #[arg(short, long)]
         path: Option<PathBuf>,
         /// Optional name, defaults to directory name
         #[arg(short, long)]
