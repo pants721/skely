@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::fs;
 use std::path::Path;
 
-use anyhow::{anyhow, Result, Error};
+use anyhow::{anyhow, Result};
 use home::home_dir;
 
 pub fn sk_cfg_path() -> Result<PathBuf> {
@@ -12,11 +12,11 @@ pub fn sk_cfg_path() -> Result<PathBuf> {
     }
 }
 
-pub fn path_buf_filename(path: &PathBuf) -> Result<String> {
+pub fn path_buf_filename(path: &Path) -> Result<String> {
     Ok(path.file_name().unwrap().to_str().unwrap().to_string())
 }
 
-pub fn path_buf_to_string(p: &PathBuf) -> Result<String> {
+pub fn path_buf_to_string(p: &Path) -> Result<String> {
     match p.to_str() {
         Some(s) => Ok(s.to_string()),
         None => Err(anyhow!("Could not convert string to PathBuf")),
