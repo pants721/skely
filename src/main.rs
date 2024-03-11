@@ -86,12 +86,14 @@ fn new(id: String, path: Option<PathBuf>, name: Option<String>) -> Result<()> {
         fs::File::create(&dest_path)?;
         fs::copy(&skeleton_path, &dest_path)?;
     } else if skeleton_path.is_dir() {
-        if dest_path.exists() && !dest_path.read_dir()?.next().is_none() {
+        if (dest_path.is_dir() && !dest_path.read_dir()?.next().is_none()) || (dest_path.is_file()) {
             return Err(anyhow!("Target directory already exists and is not an empty directory"));
         }
 
         copy_recursively(&skeleton_path, &dest_path)?;
     }
+
+    // TODO: Add name replacing
     
     Ok(())
 }
@@ -122,5 +124,28 @@ fn list() -> Result<()> {
 }
 
 fn remove(id: String, no_confirm: bool) -> Result<()> {
-    unimplemented!()
+    let skeleton_path = sk_cfg_path()?.join("skeletons").join(&id);
+
+    if !skeleton_path.exists() {
+        return Err(anyhow!("Could not find skeleton"));
+    }
+
+    if !no_confirm {
+        let mut input = String::new();
+        println!(
+            "Are you sure you want to delete {}? (y/n) ",
+            path_buf_to_string(&skeleton_path)?
+            );
+        std::io::stdin().read_line(&mut input)?;
+        if input != "y" {
+            return Ok(());
+        }
+    }
+
+    match skeleton_path.is_file() {
+        true => fs::remove_file(&skeleton_path)?,
+        false => fs::remove_dir_all(&skeleton_path)?,
+    }
+
+    Ok(())
 }
