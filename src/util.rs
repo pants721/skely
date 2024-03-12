@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{io::Write, path::PathBuf};
 use std::fs;
 use std::path::Path;
 
@@ -34,6 +34,37 @@ pub fn copy_recursively(source: impl AsRef<Path>, destination: impl AsRef<Path>)
             fs::copy(entry.path(), destination.as_ref().join(entry.file_name()))?;
         }
     }
+
+    Ok(())
+}
+
+pub fn replace_string_in_dir(input_path: &PathBuf, from: String, to: String) -> Result<()> {
+    if input_path.is_file() {
+        replace_string_in_file(input_path, from.clone(), to.clone())?;
+        return Ok(());
+    }
+
+    let paths = fs::read_dir(input_path)?;
+
+    for dir_entry in paths {
+        if dir_entry.as_ref().unwrap().path().is_dir() {
+            replace_string_in_dir(&dir_entry?.path(), from.clone(), to.clone())?;
+        } else {
+            replace_string_in_file(&dir_entry?.path(), from.clone(), to.clone())?;
+        }
+    }
+
+    Ok(())
+}
+
+pub fn replace_string_in_file(path: &PathBuf, from: String, to: String) -> Result<()> {
+    let data = fs::read_to_string(path)?;
+    let new = data.replace(&from, &to);
+    let mut file = fs::OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .open(path)?;
+    file.write_all(new.as_bytes())?;
 
     Ok(())
 }

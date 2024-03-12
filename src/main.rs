@@ -1,7 +1,8 @@
 use anyhow::{anyhow, Context, Result};
 use cli::{Cli, Commands};
 use colored::{ColoredString, Colorize};
-use util::sk_cfg_path;
+use std::env;
+use util::{replace_string_in_dir, sk_cfg_path};
 use std::{path::PathBuf};
 use std::fs;
 
@@ -11,6 +12,8 @@ use crate::util::{copy_recursively, path_buf_filename, path_buf_to_string};
 
 mod cli;
 mod util;
+
+static PLACEHOLDER_ENV_VAR: &str = "SK_PLACEHOLDER";
 
 fn main() -> Result<()> {
     let args = Cli::parse(); 
@@ -55,8 +58,9 @@ fn add(source: PathBuf, id: Option<String>) -> Result<()> {
     Ok(())
 }
 
-fn new(id: String, path: Option<PathBuf>, _name: Option<String>) -> Result<()> {
+fn new(id: String, path: Option<PathBuf>, name: Option<String>) -> Result<()> {
     let mut dest_path = path.unwrap_or(PathBuf::from(&id));
+    let inferred_project_name = path_buf_filename(&dest_path)?;
     let skeleton_path = sk_cfg_path()?.join("skeletons").join(&id);
 
     if !skeleton_path.exists() {
@@ -87,7 +91,11 @@ fn new(id: String, path: Option<PathBuf>, _name: Option<String>) -> Result<()> {
         copy_recursively(&skeleton_path, &dest_path)?;
     }
 
-    // TODO: Add name replacing
+    let placeholder = env::var(PLACEHOLDER_ENV_VAR).unwrap_or("PLACEHOLDER".to_string());
+
+    let project_name = name.unwrap_or(inferred_project_name);
+
+    replace_string_in_dir(&dest_path, placeholder, project_name)?;
     
     Ok(())
 }
