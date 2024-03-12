@@ -25,15 +25,15 @@ pub enum Commands {
         #[arg(short, long)]
         id: Option<String>,
     },
-    /// Creates a new project from specified skeleton
+    /// Creates a new project using skeleton
     New {
-        /// Id of skeleton to copy
+        /// Id of skeleton to use
         #[arg(required = true)]
         id: String,
         /// Desired project path
         #[arg(short, long)]
         path: Option<PathBuf>,
-        /// Optional name, defaults to directory name
+        /// Name to replace placeholder with. Defaults to directory name
         #[arg(short, long)]
         name: Option<String>,
     },

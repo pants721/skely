@@ -3,7 +3,7 @@
 
 ## About
 
-Skely is very simple. All it does is copy a given template file or directory from `~.config/sk` to a specified directory.
+Skely is a command line tool for managing and using project templates. Skely is especially useful when working with languages like C that don't have the luxury of a cargo-esque project initializer.
 
 ## Installation 
 To install Skely run
@@ -15,70 +15,20 @@ cargo install skely
 
 ### Settings
 
-As of right now, Skely's configuration is very simple. It is one file at `~/.config/config.toml`. The default configuration looks like this:
-```toml
-# Skely config
-editor = ""
-placeholder = "PLACEHOLDER"
-```
-As you many have guessed, the editor option is the editor you would like Skely to use. The string should contain the proper command to call the editor. For example, if I wanted to use Neovim, I **wouldn't** use `editor = "neovim"`, I **would** use `editor = "nvim` so that Skely can properly execute it. Placeholder is a bit more complicated. Placeholder is the string that you want to be replaced in all the skeleton files with your project's name. To disable this option simply leave it blank as `""`
-
-### Configuring New Skeletons
-
-To configure a new skeleton, you can either configure it manually by creating it in the `~/.config/skeletons` directory as a directory or file under the name you would like to identify it by, or you can run the `sk add foo` command to open `~/.config/skeletons/foo.sk` in your preferred text editor. Interactive directory creation is currently under development.
+Skely uses the `SK_PLACEHOLDER` enviroment variable to determine a placeholder string to replace with a project name when using a skeleton. If this variable is unset, it will default to `PLACEHOLDER`.
 
 ## Usage
 
-### Directory
+### Add
+Skely can add new skeletons by passing Skely a directory or file to copy. `sk add foo/` will add `foo/` as a skeleton, found at `~/.config/sk/skeletons/foo/`.
 
-We have a skeleton structured like this:
-```
-~/.config/sk/skeletons/
-├─ c/
-│  ├─ src/
-│  │  ├─ main.c
-│  ├─ CMakeLists.txt
-```
-The pattern for creating a new project using a template is
-```bash
-sk new <ID> <PATH>
-```
-To create a new project using this template in directory `foo` you would use the command
-```bash
-sk new c foo
-```
-
-### Single File
-
-We have a template for a `CMakeLists.txt`:
-```
-~/.config/sk/skeletons/
-├─ cmake.sk
-```
-To copy this file to our project as `CMakeLists.txt` you would use the command
-```bash
-sk new cmake CMakeLists.txt
-```
-If you were to run
-```bash
-sk new cmake .
-```
-It would copy `cmake.sk` to your current project with the name `cmake.sk`
+### New
+To create a new project using skeleton do `sk new <PROJECT NAME>`. `sk new foo` will create project at `/foo`. Additional options can be found using `sk new --help`.
 
 ### Remove
-
-To remove a configured skeleton `foo`, you would run
-```bash
-sk remove foo
-```
-Pretty simple
+To remove a skeleton do `sk remove <PROJECT NAME>`.
 
 ### List
-
-Equally as simple, to list configured skeletons, run
-```bash
-sk list
-```
-Shocking!
+To list all configured skeletons do `sk list`.
 
 If you've read this far, thank you for taking interest in my software, it is much appreciated :).
