@@ -2,7 +2,7 @@ use anyhow::{anyhow, Context, Result};
 use cli::{Cli, Commands};
 use colored::{ColoredString, Colorize};
 use std::env;
-use util::{replace_string_in_dir, sk_cfg_path};
+use util::{replace_string_in_dir, replace_string_in_filenames, sk_cfg_path};
 use std::{path::PathBuf};
 use std::fs;
 
@@ -95,7 +95,8 @@ fn new(id: String, path: Option<PathBuf>, name: Option<String>) -> Result<()> {
 
     let project_name = name.unwrap_or(inferred_project_name);
 
-    replace_string_in_dir(&dest_path, placeholder, project_name)?;
+    replace_string_in_dir(&dest_path, &placeholder, &project_name)?;
+    replace_string_in_filenames(&dest_path, &placeholder, &project_name)?;
     
     Ok(())
 }

@@ -38,9 +38,9 @@ pub fn copy_recursively(source: impl AsRef<Path>, destination: impl AsRef<Path>)
     Ok(())
 }
 
-pub fn replace_string_in_dir(input_path: &PathBuf, from: String, to: String) -> Result<()> {
+pub fn replace_string_in_dir(input_path: &PathBuf, from: &str, to: &str) -> Result<()> {
     if input_path.is_file() {
-        replace_string_in_file(input_path, from.clone(), to.clone())?;
+        replace_string_in_file(input_path, from, to)?;
         return Ok(());
     }
 
@@ -48,16 +48,16 @@ pub fn replace_string_in_dir(input_path: &PathBuf, from: String, to: String) -> 
 
     for dir_entry in paths {
         if dir_entry.as_ref().unwrap().path().is_dir() {
-            replace_string_in_dir(&dir_entry?.path(), from.clone(), to.clone())?;
+            replace_string_in_dir(&dir_entry?.path(), from, to)?;
         } else {
-            replace_string_in_file(&dir_entry?.path(), from.clone(), to.clone())?;
+            replace_string_in_file(&dir_entry?.path(), from, to)?;
         }
     }
 
     Ok(())
 }
 
-pub fn replace_string_in_file(path: &PathBuf, from: String, to: String) -> Result<()> {
+pub fn replace_string_in_file(path: &PathBuf, from: &str, to: &str) -> Result<()> {
     let data = fs::read_to_string(path)?;
     let new = data.replace(&from, &to);
     let mut file = fs::OpenOptions::new()
@@ -66,5 +66,27 @@ pub fn replace_string_in_file(path: &PathBuf, from: String, to: String) -> Resul
         .open(path)?;
     file.write_all(new.as_bytes())?;
 
+    Ok(())
+}
+
+// FIXME: something about this code feels innificent like control flow wise but im tired
+pub fn replace_string_in_filenames(path: &PathBuf, from: &str, to: &str) -> Result<()> {
+    for entry in fs::read_dir(path)?.flatten() {
+        let path = entry.path(); 
+
+        let file_name = path_buf_filename(&path)?;
+        if file_name.split('.').next().unwrap() == from {
+            let new_name = file_name.replace(&from, &to);
+            let new_path = path.parent().unwrap().join(new_name);
+
+            fs::rename(&path, &new_path)?;
+
+            if new_path.is_dir() {
+                replace_string_in_filenames(&new_path, from, to)?;
+            }
+        } else {
+            replace_string_in_filenames(&path, from, to)?;
+        }
+    }
     Ok(())
 }
