@@ -7,6 +7,7 @@ use clap::{Parser, Subcommand};
 #[command(bin_name = "sk")]
 #[command(about = "A command line tool for using and managing skeleton projects", long_about = None)]
 #[command(author = "Lucas Newcomb (pants721)")]
+#[command(version)]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
