@@ -1,8 +1,9 @@
+use std::os::unix::fs::PermissionsExt;
 use std::{io::Write, path::PathBuf};
 use std::fs;
 use std::path::Path;
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use home::home_dir;
 
 pub fn sk_cfg_path() -> Result<PathBuf> {
@@ -40,25 +41,37 @@ pub fn copy_recursively(source: impl AsRef<Path>, destination: impl AsRef<Path>)
 
 pub fn replace_string_in_dir(input_path: &PathBuf, from: &str, to: &str) -> Result<()> {
     if input_path.is_file() {
-        replace_string_in_file(input_path, from, to)?;
+        replace_string_in_file(input_path, from, to).context(format!("Failed to replace placeholder string in {}", input_path.display()))?;
         return Ok(());
     }
 
     let paths = fs::read_dir(input_path)?;
 
     for dir_entry in paths {
-        if dir_entry.as_ref().unwrap().path().is_dir() {
-            replace_string_in_dir(&dir_entry?.path(), from, to)?;
+        let entry_path = dir_entry?.path();
+        if entry_path.is_dir() {
+            replace_string_in_dir(&entry_path, from, to).context(format!("Failed to replace placeholder string in {}", entry_path.display()))?;
         } else {
-            replace_string_in_file(&dir_entry?.path(), from, to)?;
+            replace_string_in_file(&entry_path, from, to).context(format!("Failed to replace placeholder string in {}", entry_path.display()))?;
         }
     }
 
     Ok(())
 }
 
+// SOURCE: https://www.reddit.com/r/rust/comments/leewn4/how_to_check_if_a_file_is_executable/
+fn is_executable(path: &Path) -> Result<bool> {
+    let permissions = path.metadata()?.permissions();
+
+    Ok(permissions.mode() & 0o111 != 0)
+}
+
 pub fn replace_string_in_file(path: &PathBuf, from: &str, to: &str) -> Result<()> {
-    let data = fs::read_to_string(path)?;
+    if is_executable(&path)? {
+        return Ok(())
+    }
+
+    let data = fs::read_to_string(path).context(format!("Failed to read {}", path.display()))?;
     let new = data.replace(&from, &to);
     let mut file = fs::OpenOptions::new()
         .write(true)
