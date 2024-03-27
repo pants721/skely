@@ -2,11 +2,11 @@ use anyhow::{anyhow, Context, Result};
 use cli::{Cli, Commands};
 use colored::{ColoredString, Colorize};
 use std::env;
-use util::{replace_string_in_dir, replace_string_in_filenames, sk_cfg_path};
-use std::{path::PathBuf};
 use std::fs;
+use std::path::PathBuf;
+use util::{replace_string_in_dir, replace_string_in_filenames, sk_cfg_path};
 
-use clap::{Parser};
+use clap::Parser;
 
 use crate::util::{copy_recursively, path_buf_filename, path_buf_to_string};
 
@@ -16,7 +16,7 @@ mod util;
 static PLACEHOLDER_ENV_VAR: &str = "SK_PLACEHOLDER";
 
 fn main() -> Result<()> {
-    let args = Cli::parse(); 
+    let args = Cli::parse();
     match args.command {
         Commands::Add { id, source } => add(source, id)?,
         Commands::New { id, path, name } => new(id, path, name)?,
@@ -28,29 +28,25 @@ fn main() -> Result<()> {
 }
 
 fn add(source: PathBuf, id: Option<String>) -> Result<()> {
-    let dest_path: PathBuf = sk_cfg_path()?.join("skeletons").join(
-        match id {
-            Some(id) => id,
-            None => source.file_name().unwrap().to_str().unwrap().to_string()
-        }
-    );
+    let dest_path: PathBuf = sk_cfg_path()?.join("skeletons").join(match id {
+        Some(id) => id,
+        None => source.file_name().unwrap().to_str().unwrap().to_string(),
+    });
 
     if !source.exists() {
-        return Err(anyhow!(
-            "Could not find file {:?}",
-            dest_path.display()
-        ))
+        return Err(anyhow!("Could not find file {:?}", dest_path.display()));
     }
 
     if dest_path.exists() {
         return Err(anyhow!(
-            "Skeleton at {:?} already exists!", 
+            "Skeleton at {:?} already exists!",
             dest_path.display()
-        ))
+        ));
     }
 
     if source.is_dir() {
-        copy_recursively(source, dest_path).context("Failed to copy source to skeletons directory")?;
+        copy_recursively(&source, &dest_path)
+            .context("Failed to copy source to skeletons directory")?;
     } else if source.is_file() {
         fs::copy(source, dest_path).context("Failed to copy source to skeletons directory")?;
     }
@@ -70,7 +66,7 @@ fn new(id: String, path: Option<PathBuf>, name: Option<String>) -> Result<()> {
     if skeleton_path.is_file() {
         if dest_path.is_dir() {
             dest_path.push(&id);
-        } 
+        }
 
         if dest_path.is_file() {
             return Err(anyhow!("Destination file already exists"));
@@ -85,7 +81,9 @@ fn new(id: String, path: Option<PathBuf>, name: Option<String>) -> Result<()> {
         fs::copy(&skeleton_path, &dest_path)?;
     } else if skeleton_path.is_dir() {
         if (dest_path.is_dir() && dest_path.read_dir()?.next().is_some()) || (dest_path.is_file()) {
-            return Err(anyhow!("Target directory already exists and is not an empty directory"));
+            return Err(anyhow!(
+                "Target directory already exists and is not an empty directory"
+            ));
         }
 
         copy_recursively(&skeleton_path, &dest_path)?;
@@ -95,9 +93,9 @@ fn new(id: String, path: Option<PathBuf>, name: Option<String>) -> Result<()> {
 
     let project_name = name.unwrap_or(inferred_project_name);
 
-    replace_string_in_dir(&dest_path, &placeholder, &project_name)?;
-    replace_string_in_filenames(&dest_path, &placeholder, &project_name)?;
-    
+    replace_string_in_dir(&dest_path, &placeholder, &project_name).with_context(|| "failed to replace placeholder string in file contents, verify file contents before using (`grep <PLACEHOLDER>`)")?;
+    replace_string_in_filenames(&dest_path, &placeholder, &project_name).with_context(|| "failed to replace placeholder string in file names")?;
+
     Ok(())
 }
 
