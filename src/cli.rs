@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
-use clap_complete::{Generator, Shell};
+use clap_complete::Shell;
 
 #[derive(Parser, Debug, PartialEq)]
 #[command(name = "sk")]

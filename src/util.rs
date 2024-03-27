@@ -25,9 +25,9 @@ pub fn path_buf_to_string(p: &Path) -> Result<String> {
 }
 
 pub fn copy_recursively(source: &Path, destination: &Path) -> Result<()> {
-    fs::create_dir_all(&destination)
+    fs::create_dir_all(destination)
         .with_context(|| format!("failed to create directory {}", destination.display()))?;
-    for entry in fs::read_dir(&source)
+    for entry in fs::read_dir(source)
         .with_context(|| format!("failed to read source directory {}", source.display()))?
     {
         let entry = entry?;
@@ -72,13 +72,11 @@ pub fn replace_string_in_dir(input_path: &PathBuf, from: &str, to: &str) -> Resu
             if let Err(e) = replace_string_in_dir(&entry_path, from, to) {
                 eprintln!("{}", e.context(format!("failed to replace string in {}", entry_path.display())));
             }
-        } else {
-            if let Err(e) = replace_string_in_file(&entry_path, from, to) {
-                eprintln!(
-                    "{}", 
-                    &e.context(format!("failed to replace string in {}", entry_path.display()))
-                );
-            }
+        } else if let Err(e) = replace_string_in_file(&entry_path, from, to) {
+            eprintln!(
+                "{}", 
+                &e.context(format!("failed to replace string in {}", entry_path.display()))
+            );
         }
     }
 
@@ -93,13 +91,13 @@ fn is_executable(path: &Path) -> Result<bool> {
 }
 
 pub fn replace_string_in_file(path: &PathBuf, from: &str, to: &str) -> Result<()> {
-    if is_executable(&path)? {
+    if is_executable(path)? {
         return Err(anyhow!("{} is executable", path.display()));
     }
 
     let data =
         fs::read_to_string(path).with_context(|| format!("failed to read {}", path.display()))?;
-    let new = data.replace(&from, &to);
+    let new = data.replace(from, to);
     let mut file = fs::OpenOptions::new()
         .write(true)
         .truncate(true)
@@ -112,27 +110,27 @@ pub fn replace_string_in_file(path: &PathBuf, from: &str, to: &str) -> Result<()
 
 /// returns new path
 pub fn replace_string_in_filename(path: &PathBuf, from: &str, to: &str) -> Result<PathBuf> {
-    let file_name = path_buf_filename(&path)?;
+    let file_name = path_buf_filename(path)?;
     // we use this and not Path::file_stem() because we want PLACEHOLDER.tar.gz to convert to
     // REPLACED.tar.gz not REPLACED.gz
     if file_name.split('.').next() == Some(from) {
-        let new_name = file_name.replace(&from, &to);
+        let new_name = file_name.replace(from, to);
         let new_path = path.parent().unwrap().join(new_name);
 
-        fs::rename(&path, &new_path)?;
+        fs::rename(path, &new_path)?;
         return Ok(new_path);
     }
     Ok(path.to_path_buf())
 }
 
 pub fn replace_string_in_filenames(path: &PathBuf, from: &str, to: &str) -> Result<()> {
-    let new_path = replace_string_in_filename(&path, &from, &to)?;
+    let new_path = replace_string_in_filename(path, from, to)?;
     if new_path.is_dir() {
         for entry in fs::read_dir(&new_path).with_context(|| format!("failed to read {}", &new_path.display()))?
             .flatten()
             {
                 let entry_path = entry.path();
-                replace_string_in_filenames(&entry_path, &from, &to)?;
+                replace_string_in_filenames(&entry_path, from, to)?;
             }
     }
     Ok(())
