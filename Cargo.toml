@@ -20,7 +20,7 @@ home = "^0.5.5"
 clap = {version = "^4.3.21", features = [ "derive" ]}
 anyhow = "^1.0.72"
 colored = "^2.0.4"
-clap_complete = "4.5.1"
+clap_complete = "^4.5.1"
 
 [[bin]]
 name = "sk"
