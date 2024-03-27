@@ -32,7 +32,6 @@ pub enum Commands {
         #[arg(required = true)]
         id: String,
         /// Desired project path
-        #[arg(short, long)]
         path: Option<PathBuf>,
         /// Name to replace placeholder with. Defaults to directory name
         #[arg(short, long)]
