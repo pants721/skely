@@ -19,16 +19,24 @@ Skely uses the `SK_PLACEHOLDER` enviroment variable to determine a placeholder s
 
 ## Usage
 
-### Add
-Skely can add new skeletons by passing Skely a directory or file to copy. `sk add foo/` will add `foo/` as a skeleton, found at `~/.config/sk/skeletons/foo/`.
-
 ### New
 To create a new project using skeleton do `sk new <PROJECT NAME>`. `sk new foo` will create project at `/foo`. Additional options can be found using `sk new --help`.
+
+### Add
+Skely can add new skeletons by passing Skely a directory or file to copy. `sk add foo/` will add `foo/` as a skeleton, found at `~/.config/sk/skeletons/foo/`.
 
 ### Remove
 To remove a skeleton do `sk remove <PROJECT NAME>`.
 
 ### List
 To list all configured skeletons do `sk list`.
+
+### Completion
+To generate shell completion for Skelly do `sk completion <SHELL>`. To see supported shells do `sk completion --help`. Installing completion scripts is dependent on your shell. With zsh and [oh-my-zsh](https://github.com/ohmyzsh/ohmyzsh) it would look something like this:
+```zsh
+mkdir ~/.oh-my-zsh/completions
+sk completion zsh > ~/.oh-my-zsh/completions/_sk
+omz reload
+```
 
 If you've read this far, thank you for taking interest in my software, it is much appreciated :).
