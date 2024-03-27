@@ -1,4 +1,8 @@
 use anyhow::{anyhow, Context, Result};
+use clap::Command;
+use clap::CommandFactory;
+use clap_complete::generate;
+use clap_complete::Generator;
 use cli::{Cli, Commands};
 use colored::{ColoredString, Colorize};
 use std::env;
@@ -15,6 +19,10 @@ mod util;
 
 static PLACEHOLDER_ENV_VAR: &str = "SK_PLACEHOLDER";
 
+fn print_completions<G: Generator>(gen: G, cmd: &mut Command) {
+    generate(gen, cmd, cmd.get_name().to_string(), &mut std::io::stdout());
+}
+
 fn main() -> Result<()> {
     let args = Cli::parse();
     match args.command {
@@ -22,6 +30,11 @@ fn main() -> Result<()> {
         Commands::New { id, path, name } => new(id, path, name)?,
         Commands::List => list()?,
         Commands::Remove { id, no_confirm } => remove(id, no_confirm)?,
+        Commands::Completion { shell } => {
+            let mut cmd = Cli::command();
+            eprintln!("Generating completion file for {shell:?}...");
+            print_completions(shell, &mut cmd);
+        },
     }
 
     Ok(())
