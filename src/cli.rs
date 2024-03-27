@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
+use clap_complete::{Generator, Shell};
 
 #[derive(Parser, Debug, PartialEq)]
 #[command(name = "sk")]
@@ -44,5 +45,10 @@ pub enum Commands {
         /// Removes without confirming
         #[arg(short, long)]
         no_confirm: bool,
+    },
+    /// Generates shell completion for provided shell
+    Completion {
+        #[arg(value_enum)]
+        shell: Shell,
     },
 }
